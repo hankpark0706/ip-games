@@ -59,7 +59,7 @@
       radial-gradient(closest-side at 80% 12%, rgba(255,255,255,0.55), transparent 70%),
       radial-gradient(closest-side at 60% 26%, rgba(255,255,255,0.45), transparent 70%);
   }
-  .wrap { position: relative; z-index: 1; width: 100%; max-width: 820px; }
+  .wrap { position: relative; z-index: 1; width: 100%; max-width: 1160px; }
   .intro { margin: 0 2px 14px; }
   .eyebrow { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin: 0 0 4px; }
   .intro h1 { margin: 0 0 6px; font-size: 24px; font-weight: 800; letter-spacing: -0.01em; }
@@ -171,23 +171,33 @@
   .modal-foot { padding: 12px 22px 20px; display: flex; gap: 10px; }
   .modal-foot button { flex: 1; }
 
-  /* --- Scan-to-play QR: sits in the gutter beside the sheet on wide screens, stacks on narrow --- */
-  .qr-card {
-    position: fixed; top: 44px; left: calc(50% + 410px + 22px);
-    width: 232px; z-index: 50;
-    background: #ffffff; border: 1px solid #d6e2ee; border-radius: 14px;
-    padding: 16px 16px 12px; text-align: center; box-shadow: 0 12px 30px rgba(23,65,107,0.24);
-  }
-  .qr-card .qr-title { font-size: 15px; font-weight: 800; color: #17416b; margin-bottom: 11px; letter-spacing: 0.01em; }
-  .qr-card .qr-img { width: 200px; height: 200px; display: block; margin: 0 auto; }
-  .qr-card .qr-url { font-size: 9.5px; color: #5c7994; margin-top: 11px; word-break: break-all; line-height: 1.4; font-family: ui-monospace, Menlo, monospace; }
-  @media (max-width: 1340px) {
-    .qr-card { position: static; left: auto; top: auto; width: 230px; margin: 0 auto 18px; }
-  }
-  </style>
+  /* --- dashboard: game left, formulation right --- */
+  .dash { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.9fr); gap: 18px; align-items: start; }
+  @media (max-width: 900px) { .dash { grid-template-columns: 1fr; } }
+  .col-game { min-width: 0; }
+  .col-form { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 12px 34px rgba(23,65,107,0.10); overflow: hidden; }
+  .form-head { background: var(--head-bg); color: var(--head-ink); font-weight: 800; font-size: 14px; padding: 13px 18px; border-bottom: 3px solid var(--ring); }
+  .math { padding: 16px 18px 12px; }
+  .mrow { display: flex; align-items: baseline; gap: 10px; margin-bottom: 9px; }
+  .mrow.sub { margin-bottom: 7px; }
+  .mlabel { width: 74px; flex: none; text-align: right; font-size: 11.5px; font-style: italic; color: var(--muted); }
+  .mexpr { font-family: "Cambria Math", Cambria, Georgia, "Times New Roman", serif; font-size: 16px; color: var(--ink); white-space: nowrap; }
+  .mexpr sub { font-size: 10px; } .mexpr sup { font-size: 10px; }
+  .mnote { font-size: 11px; color: var(--muted); font-style: italic; }
+  .mval { margin-left: auto; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; font-size: 18px; }
+  .vardef { font-size: 11px; color: var(--muted); line-height: 1.5; border-top: 1px dashed var(--line); margin-top: 8px; padding-top: 10px; }
+  .vardef sub { font-size: 9px; }
+  .objbar { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); padding: 12px 18px; font-size: 13px; color: var(--muted); }
+  .objbar b { font-size: 20px; color: var(--accent); font-variant-numeric: tabular-nums; }
+
+  /* --- Scan-to-play QR: small, centered at the bottom --- */
+  .qr-card { width: 172px; margin: 22px auto 0; background: #ffffff; border: 1px solid #d6e2ee; border-radius: 12px; padding: 12px 12px 10px; text-align: center; box-shadow: 0 8px 22px rgba(23,65,107,0.16); }
+  .qr-card .qr-title { font-size: 12px; font-weight: 800; color: #17416b; margin-bottom: 8px; }
+  .qr-card .qr-img { width: 132px; height: 132px; display: block; margin: 0 auto; }
+  .qr-card .qr-url { font-size: 8px; color: #5c7994; margin-top: 8px; word-break: break-all; line-height: 1.35; font-family: ui-monospace, Menlo, monospace; }
+</style>
 
 <div class="wrap">
-  <div class="qr-card"><div class="qr-title">📱 Scan to play</div><img class="qr-img" src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27215%27%20height%3D%27215%27%20class%3D%27segno%27%3E%3Cg%20transform%3D%27scale%285%29%27%3E%3Cpath%20fill%3D%27%23fff%27%20d%3D%27M0%200h43v43h-43z%27%2F%3E%3Cpath%20class%3D%27qrline%27%20stroke%3D%27%2312233a%27%20d%3D%27M3%203.5h7m2%200h1m2%200h1m1%200h1m2%200h2m1%200h1m3%200h2m2%200h1m1%200h7m-37%201h1m5%200h1m2%200h2m1%200h1m2%200h2m2%200h1m1%200h1m2%200h2m1%200h1m2%200h1m5%200h1m-37%201h1m1%200h3m1%200h1m1%200h1m2%200h1m1%200h3m3%200h3m2%200h1m1%200h1m1%200h1m1%200h1m1%200h3m1%200h1m-37%201h1m1%200h3m1%200h1m1%200h1m1%200h3m1%200h1m2%200h1m1%200h1m2%200h1m1%200h2m1%200h1m2%200h1m1%200h3m1%200h1m-37%201h1m1%200h3m1%200h1m1%200h2m1%200h2m1%200h1m3%200h2m2%200h2m1%200h2m1%200h1m1%200h1m1%200h3m1%200h1m-37%201h1m5%200h1m1%200h1m1%200h1m1%200h5m1%200h1m3%200h1m1%200h1m1%200h2m2%200h1m5%200h1m-37%201h7m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h7m-29%201h1m1%200h5m-15%201h1m1%200h5m2%200h2m3%200h2m2%200h1m1%200h3m1%200h4m2%200h5m-34%201h1m3%200h1m4%200h1m1%200h5m4%200h1m2%200h1m3%200h2m1%200h1m1%200h1m1%200h1m-34%201h2m1%200h3m2%200h2m5%200h1m2%200h3m1%200h1m2%200h2m2%200h1m2%200h3m-37%201h1m6%200h2m5%200h1m1%200h1m4%200h2m4%200h2m1%200h2m4%200h1m-37%201h1m1%200h1m1%200h3m4%200h1m1%200h2m2%200h1m2%200h1m1%200h2m1%200h1m2%200h3m1%200h5m-36%201h2m1%200h2m1%200h2m1%200h3m1%200h1m1%200h6m1%200h1m1%200h2m1%200h1m2%200h1m-30%201h2m2%200h8m1%200h3m2%200h2m3%200h9m1%200h2m-35%201h2m3%200h1m1%200h1m2%200h2m1%200h4m2%200h2m1%200h1m1%200h2m2%200h3m2%200h2m-33%201h3m1%200h2m1%200h1m4%200h1m2%200h1m1%200h1m1%200h5m1%200h2m1%200h1m1%200h2m-35%201h3m4%200h8m2%200h1m1%200h4m2%200h1m2%200h1m1%200h1m2%200h2m-34%201h1m1%200h3m2%200h2m1%200h1m2%200h2m1%200h2m5%200h4m1%200h1m1%200h1m1%200h3m-35%201h1m1%200h2m1%200h2m2%200h1m3%200h1m3%200h3m4%200h1m2%200h4m3%200h1m-37%201h2m1%200h2m1%200h4m1%200h1m1%200h3m1%200h1m1%200h1m3%200h3m3%200h2m1%200h1m1%200h1m-35%201h6m1%200h1m3%200h1m1%200h2m1%200h1m1%200h3m2%200h1m2%200h1m1%200h1m4%200h1m-32%201h1m3%200h1m3%200h4m1%200h2m1%200h1m1%200h1m1%200h1m2%200h3m1%200h5m2%200h1m-36%201h2m2%200h1m1%200h2m3%200h3m1%200h1m2%200h2m2%200h1m2%200h2m1%200h1m1%200h2m-33%201h2m1%200h2m1%200h6m1%200h1m4%200h5m1%200h2m1%200h1m1%200h2m1%200h1m1%200h2m-36%201h2m2%200h1m4%200h2m3%200h4m5%200h1m4%200h1m2%200h1m1%200h1m-34%201h1m2%200h1m2%200h1m2%200h3m1%200h1m6%200h1m1%200h1m1%200h1m2%200h1m1%200h1m1%200h1m2%200h3m-37%201h1m1%200h1m4%200h2m1%200h2m2%200h1m1%200h1m4%200h1m9%200h2m-33%201h1m1%200h1m1%200h1m1%200h5m1%200h3m2%200h1m4%200h1m1%200h2m1%200h6m1%200h1m1%200h1m-29%201h3m2%200h2m2%200h3m1%200h1m1%200h1m1%200h2m1%200h1m3%200h2m-34%201h7m2%200h5m1%200h3m2%200h2m2%200h3m1%200h1m1%200h1m1%200h1m1%200h3m-37%201h1m5%200h1m1%200h3m1%200h1m4%200h7m4%200h1m3%200h2m1%200h2m-37%201h1m1%200h3m1%200h1m1%200h1m1%200h1m2%200h1m1%200h2m2%200h1m1%200h1m1%200h1m1%200h8m1%200h1m-35%201h1m1%200h3m1%200h1m1%200h2m1%200h1m1%200h3m2%200h1m1%200h1m1%200h2m4%200h3m1%200h1m3%200h1m-37%201h1m1%200h3m1%200h1m1%200h1m1%200h3m2%200h2m2%200h1m1%200h1m2%200h5m4%200h1m1%200h2m-37%201h1m5%200h1m2%200h2m2%200h1m1%200h1m3%200h4m1%200h1m3%200h2m2%200h2m2%200h1m-37%201h7m1%200h1m1%200h2m1%200h1m1%200h3m1%200h1m2%200h4m3%200h1m2%200h5%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E" alt="QR code to open the game on a phone"/><div class="qr-url">hankpark0706.github.io/ip-games/min-cost-network-flow.html</div></div>
   
   <div class="intro">
     <p class="eyebrow">Field Resupply · one balance row per node</p>
@@ -197,7 +207,9 @@
     flow balances, at the <b>lowest</b> total cost. Submit when every node is balanced.</p>
   </div>
 
-  <div class="sheet">
+  <div class="dash">
+    <div class="col-game">
+    <div class="sheet">
     <div class="pack">
       <div class="readout bal" id="balbox"><span class="k">Nodes balanced</span><b><span id="balcount">0</span> / 5</b></div>
       <div class="readout"><span class="k">Total cost</span><b id="cost">0</b></div>
@@ -220,6 +232,19 @@
     <button class="action" id="reset">Reset</button>
     <button class="action submit" id="submit" disabled>Submit</button>
   </div>
+    </div>
+    <aside class="col-form">
+      <div class="form-head">Linear Program</div>
+      <div class="math">
+        <div class="mrow"><span class="mlabel">minimize</span><span class="mexpr">&#8721;<sub>(i,j)&#8712;E</sub> c<sub>ij</sub> y<sub>ij</sub></span><span class="mval" id="objval">0</span></div>
+        <div class="mrow sub"><span class="mlabel">subject to</span><span class="mexpr">&#8721;<sub>out</sub> y<sub>ij</sub> &#8722; &#8721;<sub>in</sub> y<sub>ji</sub> = b<sub>i</sub></span></div>
+        <div class="mrow sub"><span class="mlabel"></span><span class="mexpr">0 &#8804; y<sub>ij</sub> &#8804; u<sub>ij</sub></span><span class="mnote">arc capacity</span></div>
+        <div class="vardef">y<sub>ij</sub> = flow on arc <i>i</i>&rarr;<i>j</i>;&nbsp; c<sub>ij</sub> = cost, u<sub>ij</sub> = capacity, b<sub>i</sub> = net supply. One balance row per node — checked live on the map below.</div>
+      </div>
+      <div class="objbar"><span>Objective&nbsp; &#8721; c<sub>ij</sub>y<sub>ij</sub></span><b id="objbar">0</b></div>
+    </aside>
+  </div>
+  <div class="qr-card"><div class="qr-title">📱 Scan to play</div><img class="qr-img" src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27215%27%20height%3D%27215%27%20class%3D%27segno%27%3E%3Cg%20transform%3D%27scale%285%29%27%3E%3Cpath%20fill%3D%27%23fff%27%20d%3D%27M0%200h43v43h-43z%27%2F%3E%3Cpath%20class%3D%27qrline%27%20stroke%3D%27%2312233a%27%20d%3D%27M3%203.5h7m2%200h1m2%200h1m1%200h1m2%200h2m1%200h1m3%200h2m2%200h1m1%200h7m-37%201h1m5%200h1m2%200h2m1%200h1m2%200h2m2%200h1m1%200h1m2%200h2m1%200h1m2%200h1m5%200h1m-37%201h1m1%200h3m1%200h1m1%200h1m2%200h1m1%200h3m3%200h3m2%200h1m1%200h1m1%200h1m1%200h1m1%200h3m1%200h1m-37%201h1m1%200h3m1%200h1m1%200h1m1%200h3m1%200h1m2%200h1m1%200h1m2%200h1m1%200h2m1%200h1m2%200h1m1%200h3m1%200h1m-37%201h1m1%200h3m1%200h1m1%200h2m1%200h2m1%200h1m3%200h2m2%200h2m1%200h2m1%200h1m1%200h1m1%200h3m1%200h1m-37%201h1m5%200h1m1%200h1m1%200h1m1%200h5m1%200h1m3%200h1m1%200h1m1%200h2m2%200h1m5%200h1m-37%201h7m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h7m-29%201h1m1%200h5m-15%201h1m1%200h5m2%200h2m3%200h2m2%200h1m1%200h3m1%200h4m2%200h5m-34%201h1m3%200h1m4%200h1m1%200h5m4%200h1m2%200h1m3%200h2m1%200h1m1%200h1m1%200h1m-34%201h2m1%200h3m2%200h2m5%200h1m2%200h3m1%200h1m2%200h2m2%200h1m2%200h3m-37%201h1m6%200h2m5%200h1m1%200h1m4%200h2m4%200h2m1%200h2m4%200h1m-37%201h1m1%200h1m1%200h3m4%200h1m1%200h2m2%200h1m2%200h1m1%200h2m1%200h1m2%200h3m1%200h5m-36%201h2m1%200h2m1%200h2m1%200h3m1%200h1m1%200h6m1%200h1m1%200h2m1%200h1m2%200h1m-30%201h2m2%200h8m1%200h3m2%200h2m3%200h9m1%200h2m-35%201h2m3%200h1m1%200h1m2%200h2m1%200h4m2%200h2m1%200h1m1%200h2m2%200h3m2%200h2m-33%201h3m1%200h2m1%200h1m4%200h1m2%200h1m1%200h1m1%200h5m1%200h2m1%200h1m1%200h2m-35%201h3m4%200h8m2%200h1m1%200h4m2%200h1m2%200h1m1%200h1m2%200h2m-34%201h1m1%200h3m2%200h2m1%200h1m2%200h2m1%200h2m5%200h4m1%200h1m1%200h1m1%200h3m-35%201h1m1%200h2m1%200h2m2%200h1m3%200h1m3%200h3m4%200h1m2%200h4m3%200h1m-37%201h2m1%200h2m1%200h4m1%200h1m1%200h3m1%200h1m1%200h1m3%200h3m3%200h2m1%200h1m1%200h1m-35%201h6m1%200h1m3%200h1m1%200h2m1%200h1m1%200h3m2%200h1m2%200h1m1%200h1m4%200h1m-32%201h1m3%200h1m3%200h4m1%200h2m1%200h1m1%200h1m1%200h1m2%200h3m1%200h5m2%200h1m-36%201h2m2%200h1m1%200h2m3%200h3m1%200h1m2%200h2m2%200h1m2%200h2m1%200h1m1%200h2m-33%201h2m1%200h2m1%200h6m1%200h1m4%200h5m1%200h2m1%200h1m1%200h2m1%200h1m1%200h2m-36%201h2m2%200h1m4%200h2m3%200h4m5%200h1m4%200h1m2%200h1m1%200h1m-34%201h1m2%200h1m2%200h1m2%200h3m1%200h1m6%200h1m1%200h1m1%200h1m2%200h1m1%200h1m1%200h1m2%200h3m-37%201h1m1%200h1m4%200h2m1%200h2m2%200h1m1%200h1m4%200h1m9%200h2m-33%201h1m1%200h1m1%200h1m1%200h5m1%200h3m2%200h1m4%200h1m1%200h2m1%200h6m1%200h1m1%200h1m-29%201h3m2%200h2m2%200h3m1%200h1m1%200h1m1%200h2m1%200h1m3%200h2m-34%201h7m2%200h5m1%200h3m2%200h2m2%200h3m1%200h1m1%200h1m1%200h1m1%200h3m-37%201h1m5%200h1m1%200h3m1%200h1m4%200h7m4%200h1m3%200h2m1%200h2m-37%201h1m1%200h3m1%200h1m1%200h1m1%200h1m2%200h1m1%200h2m2%200h1m1%200h1m1%200h1m1%200h8m1%200h1m-35%201h1m1%200h3m1%200h1m1%200h2m1%200h1m1%200h3m2%200h1m1%200h1m1%200h2m4%200h3m1%200h1m3%200h1m-37%201h1m1%200h3m1%200h1m1%200h1m1%200h3m2%200h2m2%200h1m1%200h1m2%200h5m4%200h1m1%200h2m-37%201h1m5%200h1m2%200h2m2%200h1m1%200h1m3%200h4m1%200h1m3%200h2m2%200h2m2%200h1m-37%201h7m1%200h1m1%200h2m1%200h1m1%200h3m1%200h1m2%200h4m3%200h1m2%200h5%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E" alt="QR code to open the game on a phone"/><div class="qr-url">hankpark0706.github.io/ip-games/min-cost-network-flow.html</div></div>
 </div>
 
 <div class="overlay" id="overlay">
@@ -430,6 +455,8 @@
 
     document.getElementById("balcount").textContent = balanced;
     document.getElementById("cost").textContent = totCost;
+    document.getElementById("objval").textContent = totCost;
+    document.getElementById("objbar").textContent = totCost;
     const complete = balanced===M;
     document.getElementById("balbox").classList.toggle("done", complete);
 
