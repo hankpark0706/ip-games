@@ -50,7 +50,7 @@
       radial-gradient(closest-side at 80% 12%, rgba(255,255,255,0.55), transparent 70%),
       radial-gradient(closest-side at 60% 26%, rgba(255,255,255,0.45), transparent 70%);
   }
-  .wrap { position: relative; z-index: 1; width: 100%; max-width: 780px; }
+  .wrap { position: relative; z-index: 1; width: 100%; max-width: 1140px; }
   .intro { margin: 0 2px 14px; }
   .eyebrow { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin: 0 0 4px; }
   .intro h1 { margin: 0 0 6px; font-size: 24px; font-weight: 800; letter-spacing: -0.01em; }
@@ -145,33 +145,52 @@
   .modal-foot { padding: 12px 22px 20px; display: flex; gap: 10px; }
   .modal-foot button { flex: 1; }
 
-  /* --- Scan-to-play QR: sits in the gutter beside the sheet on wide screens, stacks on narrow --- */
-  .qr-card {
-    position: fixed; top: 44px; left: calc(50% + 390px + 22px);
-    width: 232px; z-index: 50;
-    background: #ffffff; border: 1px solid #d6e2ee; border-radius: 14px;
-    padding: 16px 16px 12px; text-align: center; box-shadow: 0 12px 30px rgba(23,65,107,0.24);
-  }
-  .qr-card .qr-title { font-size: 15px; font-weight: 800; color: #17416b; margin-bottom: 11px; letter-spacing: 0.01em; }
-  .qr-card .qr-img { width: 200px; height: 200px; display: block; margin: 0 auto; }
-  .qr-card .qr-url { font-size: 9.5px; color: #5c7994; margin-top: 11px; word-break: break-all; line-height: 1.4; font-family: ui-monospace, Menlo, monospace; }
-  @media (max-width: 1300px) {
-    .qr-card { position: static; left: auto; top: auto; width: 230px; margin: 0 auto 18px; }
-  }
-  </style>
+  /* --- dashboard: game left, formulation right --- */
+  .dash { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.92fr); gap: 18px; align-items: start; }
+  @media (max-width: 880px) { .dash { grid-template-columns: 1fr; } }
+  .col-game { min-width: 0; }
+  .col-form { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 12px 34px rgba(23,65,107,0.10); overflow: hidden; }
+  .form-head { background: var(--head-bg); color: var(--head-ink); font-weight: 800; font-size: 14px; padding: 13px 18px; border-bottom: 3px solid var(--ring); }
+  .math { padding: 16px 18px 12px; }
+  .mrow { display: flex; align-items: baseline; gap: 10px; margin-bottom: 9px; }
+  .mrow.sub { margin-bottom: 7px; }
+  .mlabel { width: 74px; flex: none; text-align: right; font-size: 11.5px; font-style: italic; color: var(--muted); }
+  .mexpr { font-family: "Cambria Math", Cambria, Georgia, "Times New Roman", serif; font-size: 17px; color: var(--ink); white-space: nowrap; }
+  .mexpr sub { font-size: 11px; } .mexpr sup { font-size: 10px; }
+  .mnote { font-size: 11px; color: var(--muted); font-style: italic; }
+  .mval { margin-left: auto; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; font-size: 18px; }
+  .vardef { font-size: 11px; color: var(--muted); line-height: 1.5; border-top: 1px dashed var(--line); margin-top: 8px; padding-top: 10px; }
+  .vardef sub { font-size: 9px; }
+  .ccheck { border-top: 1px dashed var(--line); padding: 13px 18px; }
+  .cc-title { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 800; margin-bottom: 11px; }
+  .cc-group { margin-bottom: 11px; }
+  .cc-h { font-size: 11.5px; color: var(--muted); display: block; margin-bottom: 7px; }
+  .cc-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .cc-chip { font-size: 12px; font-weight: 700; padding: 5px 9px; border-radius: 999px; background: var(--band-a); border: 1px solid var(--line); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .cc-chip.ok { color: var(--good); border-color: var(--good); }
+  .objbar { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); padding: 12px 18px; font-size: 13px; color: var(--muted); }
+  .objbar b { font-size: 20px; color: var(--accent); font-variant-numeric: tabular-nums; }
+
+  /* --- Scan-to-play QR: small, centered at the bottom --- */
+  .qr-card { width: 172px; margin: 22px auto 0; background: #ffffff; border: 1px solid #d6e2ee; border-radius: 12px; padding: 12px 12px 10px; text-align: center; box-shadow: 0 8px 22px rgba(23,65,107,0.16); }
+  .qr-card .qr-title { font-size: 12px; font-weight: 800; color: #17416b; margin-bottom: 8px; }
+  .qr-card .qr-img { width: 132px; height: 132px; display: block; margin: 0 auto; }
+  .qr-card .qr-url { font-size: 8px; color: #5c7994; margin-top: 8px; word-break: break-all; line-height: 1.35; font-family: ui-monospace, Menlo, monospace; }
+</style>
 
 <div class="wrap">
-  <div class="qr-card"><div class="qr-title">📱 Scan to play</div><img class="qr-img" src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27215%27%20height%3D%27215%27%20class%3D%27segno%27%3E%3Cg%20transform%3D%27scale%285%29%27%3E%3Cpath%20fill%3D%27%23fff%27%20d%3D%27M0%200h43v43h-43z%27%2F%3E%3Cpath%20class%3D%27qrline%27%20stroke%3D%27%2312233a%27%20d%3D%27M3%203.5h7m2%200h1m4%200h2m1%200h2m1%200h1m1%200h1m1%200h2m2%200h1m1%200h7m-37%201h1m5%200h1m2%200h1m1%200h4m1%200h1m2%200h1m1%200h1m3%200h1m1%200h1m2%200h1m5%200h1m-37%201h1m1%200h3m1%200h1m1%200h1m2%200h1m1%200h2m4%200h3m2%200h1m1%200h1m1%200h1m1%200h1m1%200h3m1%200h1m-37%201h1m1%200h3m1%200h1m1%200h1m1%200h3m2%200h3m1%200h1m2%200h1m1%200h2m4%200h1m1%200h3m1%200h1m-37%201h1m1%200h3m1%200h1m1%200h2m1%200h1m2%200h3m1%200h2m2%200h2m2%200h1m1%200h1m1%200h1m1%200h3m1%200h1m-37%201h1m5%200h1m1%200h1m3%200h3m1%200h1m1%200h1m3%200h1m1%200h4m2%200h1m5%200h1m-37%201h7m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h7m-29%201h1m1%200h3m2%200h1m10%200h1m-27%201h1m1%200h5m2%200h1m5%200h1m2%200h1m1%200h3m1%200h2m1%200h1m2%200h5m-34%201h1m1%200h3m1%200h2m1%200h3m2%200h2m4%200h1m6%200h1m2%200h1m3%200h1m-34%201h1m3%200h4m1%200h1m1%200h1m3%200h1m2%200h5m2%200h2m2%200h1m2%200h3m-36%201h1m2%200h2m1%200h4m3%200h1m1%200h1m4%200h3m3%200h1m2%200h3m3%200h1m-37%201h3m1%200h1m1%200h2m2%200h1m2%200h2m1%200h2m2%200h1m1%200h2m1%200h1m2%200h3m1%200h5m-36%201h3m4%200h3m1%200h1m3%200h6m1%200h1m1%200h2m1%200h1m2%200h1m-32%201h3m1%200h3m2%200h4m2%200h3m2%200h2m3%200h5m1%200h3m1%200h2m-37%201h2m1%200h1m3%200h2m1%200h1m1%200h1m1%200h2m1%200h2m2%200h2m1%200h1m2%200h1m1%200h4m2%200h2m-37%201h9m5%200h3m2%200h1m1%200h1m1%200h5m1%200h2m1%200h1m1%200h1m-34%201h3m3%200h1m2%200h1m1%200h1m2%200h1m2%200h1m1%200h3m1%200h1m3%200h1m5%200h2m-33%201h1m1%200h4m1%200h1m3%200h3m1%200h2m4%200h4m2%200h1m2%200h4m-36%201h1m3%200h1m1%200h1m1%200h2m4%200h1m3%200h3m2%200h1m1%200h2m1%200h3m4%200h1m-36%201h1m1%200h4m2%200h1m3%200h1m1%200h1m1%200h1m1%200h1m4%200h2m3%200h2m1%200h3m-35%201h1m1%200h1m2%200h1m2%200h1m2%200h1m1%200h1m2%200h1m1%200h3m2%200h1m1%200h2m1%200h1m4%200h1m-34%201h1m1%200h2m1%200h8m2%200h2m1%200h1m1%200h1m1%200h1m4%200h1m2%200h4m1%200h2m-30%201h1m4%200h1m1%200h1m1%200h1m2%200h2m2%200h1m3%200h1m1%200h4m2%200h1m-35%201h1m1%200h4m4%200h1m6%200h5m1%200h4m1%200h4m1%200h1m1%200h1m-37%201h4m4%200h1m1%200h1m2%200h1m1%200h3m6%200h1m1%200h1m1%200h2m1%200h1m2%200h1m-35%201h1m1%200h1m2%200h3m2%200h1m2%200h1m6%200h1m1%200h1m1%200h1m2%200h3m2%200h1m2%200h2m-37%201h1m1%200h1m6%200h1m3%200h2m1%200h1m4%200h1m9%200h2m3%200h1m-37%201h1m1%200h1m1%200h3m1%200h2m3%200h1m3%200h1m4%200h4m1%200h8m1%200h1m-29%201h2m2%200h1m1%200h1m2%200h3m1%200h1m1%200h1m2%200h1m1%200h1m3%200h2m1%200h1m-36%201h7m3%200h1m4%200h3m2%200h2m2%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h3m-37%201h1m5%200h1m1%200h1m1%200h1m1%200h1m4%200h7m4%200h1m3%200h2m1%200h1m-36%201h1m1%200h3m1%200h1m1%200h1m2%200h1m1%200h1m1%200h2m2%200h1m1%200h1m1%200h10m1%200h1m1%200h1m-37%201h1m1%200h3m1%200h1m1%200h3m3%200h2m2%200h1m1%200h1m1%200h2m4%200h3m1%200h1m3%200h1m-37%201h1m1%200h3m1%200h1m1%200h1m2%200h2m2%200h2m2%200h1m1%200h1m3%200h4m6%200h2m-37%201h1m5%200h1m2%200h1m2%200h1m2%200h1m3%200h4m4%200h4m1%200h1m3%200h1m-37%201h7m1%200h2m2%200h2m1%200h3m1%200h1m2%200h4m4%200h1m1%200h5%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E" alt="QR code to open the game on a phone"/><div class="qr-url">hankpark0706.github.io/ip-games/assignment-matching.html</div></div>
   
   <div class="intro">
     <p class="eyebrow">Cadet Branch Selection</p>
     <h1>Matching Problem</h1>
     <p>Assign all four cadets to Army, Navy, Air Force, and Marines — <b>one cadet per branch</b>, and each branch takes exactly one cadet.
     Each number (1–5) is how well a cadet fits that branch. <b>Maximize the total fit score.</b>
-    Click a cell to choose, then Submit. Hit <b>New Problem</b> for a fresh, randomly generated board.</p>
+    Click a cell to choose — watch the integer program on the right update live — then Submit. Hit <b>New Problem</b> for a fresh board.</p>
   </div>
 
-  <div class="sheet">
+  <div class="dash">
+    <div class="col-game">
+    <div class="sheet">
     <table>
       <thead>
         <tr>
@@ -189,6 +208,25 @@
     <div class="total-chip">Current total <b><span id="total">0</span></b></div>
     <button class="action submit" id="submit" disabled>Submit</button>
   </div>
+    </div>
+    <aside class="col-form">
+      <div class="form-head">The Integer Program</div>
+      <div class="math">
+        <div class="mrow"><span class="mlabel">maximize</span><span class="mexpr">&#8721;<sub>i</sub>&#8201;&#8721;<sub>j</sub> c<sub>ij</sub> x<sub>ij</sub></span><span class="mval" id="objval">0</span></div>
+        <div class="mrow sub"><span class="mlabel">subject to</span><span class="mexpr">&#8721;<sub>j</sub> x<sub>ij</sub> = 1</span><span class="mnote">each cadet &rarr; one branch</span></div>
+        <div class="mrow sub"><span class="mlabel"></span><span class="mexpr">&#8721;<sub>i</sub> x<sub>ij</sub> = 1</span><span class="mnote">each branch &rarr; one cadet</span></div>
+        <div class="mrow sub"><span class="mlabel"></span><span class="mexpr">x<sub>ij</sub> &#8712; {0, 1}</span></div>
+        <div class="vardef">x<sub>ij</sub> = 1 if cadet <i>i</i> takes branch <i>j</i>;&nbsp; c<sub>ij</sub> = fit score (the table).</div>
+      </div>
+      <div class="ccheck">
+        <div class="cc-title">Constraints — live</div>
+        <div class="cc-group"><span class="cc-h">Each cadet assigned once&nbsp; (row sums)</span><div class="cc-row" id="rowcons"></div></div>
+        <div class="cc-group"><span class="cc-h">Each branch filled once&nbsp; (column sums)</span><div class="cc-row" id="colcons"></div></div>
+      </div>
+      <div class="objbar"><span>Objective&nbsp; c<sup>&#8868;</sup>x</span><b id="objbar">0</b></div>
+    </aside>
+  </div>
+  <div class="qr-card"><div class="qr-title">📱 Scan to play</div><img class="qr-img" src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27215%27%20height%3D%27215%27%20class%3D%27segno%27%3E%3Cg%20transform%3D%27scale%285%29%27%3E%3Cpath%20fill%3D%27%23fff%27%20d%3D%27M0%200h43v43h-43z%27%2F%3E%3Cpath%20class%3D%27qrline%27%20stroke%3D%27%2312233a%27%20d%3D%27M3%203.5h7m2%200h1m4%200h2m1%200h2m1%200h1m1%200h1m1%200h2m2%200h1m1%200h7m-37%201h1m5%200h1m2%200h1m1%200h4m1%200h1m2%200h1m1%200h1m3%200h1m1%200h1m2%200h1m5%200h1m-37%201h1m1%200h3m1%200h1m1%200h1m2%200h1m1%200h2m4%200h3m2%200h1m1%200h1m1%200h1m1%200h1m1%200h3m1%200h1m-37%201h1m1%200h3m1%200h1m1%200h1m1%200h3m2%200h3m1%200h1m2%200h1m1%200h2m4%200h1m1%200h3m1%200h1m-37%201h1m1%200h3m1%200h1m1%200h2m1%200h1m2%200h3m1%200h2m2%200h2m2%200h1m1%200h1m1%200h1m1%200h3m1%200h1m-37%201h1m5%200h1m1%200h1m3%200h3m1%200h1m1%200h1m3%200h1m1%200h4m2%200h1m5%200h1m-37%201h7m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h7m-29%201h1m1%200h3m2%200h1m10%200h1m-27%201h1m1%200h5m2%200h1m5%200h1m2%200h1m1%200h3m1%200h2m1%200h1m2%200h5m-34%201h1m1%200h3m1%200h2m1%200h3m2%200h2m4%200h1m6%200h1m2%200h1m3%200h1m-34%201h1m3%200h4m1%200h1m1%200h1m3%200h1m2%200h5m2%200h2m2%200h1m2%200h3m-36%201h1m2%200h2m1%200h4m3%200h1m1%200h1m4%200h3m3%200h1m2%200h3m3%200h1m-37%201h3m1%200h1m1%200h2m2%200h1m2%200h2m1%200h2m2%200h1m1%200h2m1%200h1m2%200h3m1%200h5m-36%201h3m4%200h3m1%200h1m3%200h6m1%200h1m1%200h2m1%200h1m2%200h1m-32%201h3m1%200h3m2%200h4m2%200h3m2%200h2m3%200h5m1%200h3m1%200h2m-37%201h2m1%200h1m3%200h2m1%200h1m1%200h1m1%200h2m1%200h2m2%200h2m1%200h1m2%200h1m1%200h4m2%200h2m-37%201h9m5%200h3m2%200h1m1%200h1m1%200h5m1%200h2m1%200h1m1%200h1m-34%201h3m3%200h1m2%200h1m1%200h1m2%200h1m2%200h1m1%200h3m1%200h1m3%200h1m5%200h2m-33%201h1m1%200h4m1%200h1m3%200h3m1%200h2m4%200h4m2%200h1m2%200h4m-36%201h1m3%200h1m1%200h1m1%200h2m4%200h1m3%200h3m2%200h1m1%200h2m1%200h3m4%200h1m-36%201h1m1%200h4m2%200h1m3%200h1m1%200h1m1%200h1m1%200h1m4%200h2m3%200h2m1%200h3m-35%201h1m1%200h1m2%200h1m2%200h1m2%200h1m1%200h1m2%200h1m1%200h3m2%200h1m1%200h2m1%200h1m4%200h1m-34%201h1m1%200h2m1%200h8m2%200h2m1%200h1m1%200h1m1%200h1m4%200h1m2%200h4m1%200h2m-30%201h1m4%200h1m1%200h1m1%200h1m2%200h2m2%200h1m3%200h1m1%200h4m2%200h1m-35%201h1m1%200h4m4%200h1m6%200h5m1%200h4m1%200h4m1%200h1m1%200h1m-37%201h4m4%200h1m1%200h1m2%200h1m1%200h3m6%200h1m1%200h1m1%200h2m1%200h1m2%200h1m-35%201h1m1%200h1m2%200h3m2%200h1m2%200h1m6%200h1m1%200h1m1%200h1m2%200h3m2%200h1m2%200h2m-37%201h1m1%200h1m6%200h1m3%200h2m1%200h1m4%200h1m9%200h2m3%200h1m-37%201h1m1%200h1m1%200h3m1%200h2m3%200h1m3%200h1m4%200h4m1%200h8m1%200h1m-29%201h2m2%200h1m1%200h1m2%200h3m1%200h1m1%200h1m2%200h1m1%200h1m3%200h2m1%200h1m-36%201h7m3%200h1m4%200h3m2%200h2m2%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h3m-37%201h1m5%200h1m1%200h1m1%200h1m1%200h1m4%200h7m4%200h1m3%200h2m1%200h1m-36%201h1m1%200h3m1%200h1m1%200h1m2%200h1m1%200h1m1%200h2m2%200h1m1%200h1m1%200h10m1%200h1m1%200h1m-37%201h1m1%200h3m1%200h1m1%200h3m3%200h2m2%200h1m1%200h1m1%200h2m4%200h3m1%200h1m3%200h1m-37%201h1m1%200h3m1%200h1m1%200h1m2%200h2m2%200h2m2%200h1m1%200h1m3%200h4m6%200h2m-37%201h1m5%200h1m2%200h1m2%200h1m2%200h1m3%200h4m4%200h4m1%200h1m3%200h1m-37%201h7m1%200h2m2%200h2m1%200h3m1%200h1m2%200h4m4%200h1m1%200h5%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E" alt="QR code to open the game on a phone"/><div class="qr-url">hankpark0706.github.io/ip-games/assignment-matching.html</div></div>
 </div>
 
 <div class="overlay" id="overlay">
@@ -283,6 +321,7 @@
     sel.forEach((cCol, r) => { if (cCol >= 0) tot += M[r][cCol]; });
     document.getElementById("total").textContent = tot;
     document.getElementById("submit").disabled = chosen !== 4;
+    updateForm();
   }
 
   tbody.addEventListener("click", e => {
@@ -295,7 +334,7 @@
     render();
   });
 
-  function newProblem(){ generateProblem(); sel.fill(-1); render(); }
+  function newProblem(){ generateProblem(); sel.fill(-1); buildForm(); render(); }
   document.getElementById("reset").onclick = newProblem;
 
   const overlay = document.getElementById("overlay");
@@ -323,6 +362,21 @@
   document.getElementById("close").onclick = () => overlay.classList.remove("open");
   document.getElementById("retry").onclick = () => { overlay.classList.remove("open"); sel.fill(-1); render(); };
   overlay.addEventListener("click", e => { if (e.target === overlay) overlay.classList.remove("open"); });
+
+  function buildForm(){
+    document.getElementById("rowcons").innerHTML = cadets.map((c,i)=>
+      '<span class="cc-chip" id="rc'+i+'">'+c.name.replace("Cadet ","")+' &#8721;=<span id="rcv'+i+'">0</span></span>').join("");
+    document.getElementById("colcons").innerHTML = branches.map((b,j)=>
+      '<span class="cc-chip" id="cc'+j+'">'+b+' &#8721;=<span id="ccv'+j+'">0</span></span>').join("");
+  }
+  function updateForm(){
+    let tot=0; const rs=[0,0,0,0], cs=[0,0,0,0];
+    sel.forEach((col,r)=>{ if(col>=0){ tot+=M[r][col]; rs[r]=1; cs[col]=1; } });
+    document.getElementById("objval").textContent = tot;
+    document.getElementById("objbar").textContent = tot;
+    for(let i=0;i<4;i++){ document.getElementById("rcv"+i).textContent=rs[i]; document.getElementById("rc"+i).classList.toggle("ok", rs[i]===1); }
+    for(let j=0;j<4;j++){ document.getElementById("ccv"+j).textContent=cs[j]; document.getElementById("cc"+j).classList.toggle("ok", cs[j]===1); }
+  }
 
   newProblem();
 </script>
