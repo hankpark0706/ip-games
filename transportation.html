@@ -9,7 +9,10 @@
     --ring: #3f7cae;
     --hover: #f1f7fd;
     --good: #2e8b57; --over: #c2603a;
+    --src: #5b6a3c; --hub: #3f6b8f; --snk: #b0553f;
+    --val-supply: #2e8b57; --val-demand: #c2603a; --val-cost: #c07a1f; --val-cap: #1f8a8a;
     --cell-bg: #f4f9fd;
+    --law-bg: #e7f0fa;
   }
   :root[data-theme="dark"] {
     --sky-top: #0c1a28; --sky-bot: #101f30;
@@ -20,7 +23,10 @@
     --ring: #5b9bd0;
     --hover: #182f45;
     --good: #67c896; --over: #e08a63;
+    --src: #7d8f57; --hub: #5b9bd0; --snk: #d17a63;
+    --val-supply: #67c896; --val-demand: #e08a63; --val-cost: #e0aa5a; --val-cap: #5fc0c0;
     --cell-bg: #16283c;
+    --law-bg: #16324c;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
@@ -32,7 +38,10 @@
       --ring: #5b9bd0;
       --hover: #182f45;
       --good: #67c896; --over: #e08a63;
+      --src: #7d8f57; --hub: #5b9bd0; --snk: #d17a63;
+      --val-supply: #67c896; --val-demand: #e08a63; --val-cost: #e0aa5a; --val-cap: #5fc0c0;
       --cell-bg: #16283c;
+      --law-bg: #16324c;
     }
   }
   * { box-sizing: border-box; }
@@ -61,62 +70,59 @@
     border-radius: 10px; overflow: hidden; box-shadow: 0 12px 34px rgba(23,65,107,0.18);
   }
   .pack {
-    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
-    padding: 18px 22px; background: var(--head-bg); color: var(--head-ink);
-    border-bottom: 3px solid var(--ring);
+    display: flex; align-items: center; gap: 26px; flex-wrap: wrap;
+    padding: 16px 22px; background: var(--head-bg); color: var(--head-ink);
   }
-  .truck { width: 92px; flex: none; }
-  .truck svg { width: 100%; height: auto; display: block; filter: drop-shadow(0 3px 5px rgba(0,0,0,0.28)); }
-  .readout { display: flex; gap: 26px; flex-wrap: wrap; }
   .readout .k { opacity: 0.8; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; display: block; margin-bottom: 3px; }
   .readout b { font-size: 22px; font-variant-numeric: tabular-nums; }
-  .readout .ship.done b { color: #8fe0b4; }
+  .readout .bal.done b { color: #8fe0b4; }
 
-  .tablewrap { overflow-x: auto; padding: 18px; }
-  table.grid { border-collapse: separate; border-spacing: 6px; margin: 0 auto; }
-  table.grid th, table.grid td { text-align: center; }
-  .corner { font-size: 11px; color: var(--muted); text-align: left; line-height: 1.3; }
-  .colhead, .rowhead {
-    background: var(--band-a); border: 1px solid var(--line); border-radius: 10px;
-    padding: 8px 10px; min-width: 92px;
-  }
-  .colhead .h, .rowhead .h { font-weight: 800; font-size: 13.5px; display: flex; align-items: center; justify-content: center; gap: 5px; }
-  .colhead .req, .rowhead .req { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
-  .rowhead { text-align: left; min-width: 118px; }
-  .rowhead .h { justify-content: flex-start; }
+  .diagram { padding: 16px 14px 6px; }
+  .dwrap { position: relative; width: 100%; }
+  .dwrap svg { width: 100%; height: auto; display: block; }
 
-  .cell {
-    position: relative; background: var(--cell-bg); border: 1px solid var(--line);
-    border-radius: 10px; padding: 20px 6px 8px; min-width: 92px;
+  /* on-arc controls: a cost/cap SIGN on the road + a separate flow stepper, line shows through the gap */
+  .arc-ctl {
+    position: absolute; transform: translate(-50%, -50%);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
   }
-  .cell .cost {
-    position: absolute; top: 5px; right: 7px; font-size: 11px; font-weight: 700;
-    color: var(--muted);
+  .arc-tag {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 7px;
+    padding: 3px 9px; font-size: 11px; font-weight: 700; white-space: nowrap;
+    box-shadow: 0 2px 5px rgba(23,65,107,0.16); color: var(--muted);
   }
-  .cell .cost b { color: var(--accent); }
-  .stepper { display: flex; align-items: center; justify-content: center; gap: 6px; }
-  .stepper button {
-    width: 26px; height: 26px; border-radius: 7px; border: 1px solid var(--line);
-    background: var(--panel); color: var(--ink); font-size: 17px; font-weight: 800;
-    cursor: pointer; line-height: 1; display: flex; align-items: center; justify-content: center;
-    transition: filter .1s, opacity .1s;
+  .arc-tag .c b { color: var(--val-cost); font-size: 12.5px; }
+  .arc-tag .cp b { color: var(--val-cap); font-size: 12.5px; }
+  .arc-tag .sep { opacity: 0.4; margin: 0 5px; }
+  .ac-step {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--panel); border: 1.5px solid var(--line); border-radius: 9px;
+    padding: 3px 6px; box-shadow: 0 3px 8px rgba(23,65,107,0.22);
   }
-  .stepper button:hover:not(:disabled) { filter: brightness(0.95); }
-  .stepper button:disabled { opacity: 0.3; cursor: not-allowed; }
-  .stepper button:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; }
-  .stepper .flow { min-width: 22px; font-size: 19px; font-weight: 800; font-variant-numeric: tabular-nums; }
-  .stepper .flow.zero { color: var(--muted); }
+  .arc-ctl.live .ac-step { border-color: var(--accent); }
+  .ac-step button {
+    width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--line);
+    background: var(--band-a); color: var(--ink); font-size: 16px; font-weight: 800;
+    cursor: pointer; line-height: 1; display: flex; align-items: center; justify-content: center; transition: filter .1s, opacity .1s;
+  }
+  .ac-step button:hover:not(:disabled) { filter: brightness(0.95); }
+  .ac-step button:disabled { opacity: 0.3; cursor: not-allowed; }
+  .ac-step button:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; }
+  .ac-step .flow { min-width: 18px; text-align: center; font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .ac-step .flow.zero { color: var(--muted); }
 
-  .tot {
-    background: var(--band-a); border: 1px solid var(--line); border-radius: 10px;
-    padding: 8px 10px; min-width: 78px; font-weight: 800; font-variant-numeric: tabular-nums;
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; padding: 2px 22px 10px; font-size: 12px; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+
+  .balrow { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 16px 16px; }
+  .balchip {
+    font-size: 12.5px; font-weight: 700; padding: 6px 11px; border-radius: 999px;
+    background: var(--band-a); border: 1px solid var(--line); color: var(--muted);
+    display: inline-flex; align-items: center; gap: 6px;
   }
-  .tot .s { font-size: 17px; }
-  .tot.ok { color: var(--good); border-color: var(--good); }
-  .tot.under { color: var(--muted); }
-  .tot .req { display: block; font-size: 11px; font-weight: 600; color: var(--muted); }
-  .grand { background: var(--head-bg); color: var(--head-ink); border-color: var(--head-bg); }
-  .grand .req { color: rgba(255,255,255,0.7); }
+  .balchip.ok { color: var(--good); border-color: var(--good); }
+  .balchip .tag { width: 9px; height: 9px; border-radius: 50%; }
 
   .bar {
     display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
@@ -125,7 +131,6 @@
     box-shadow: 0 6px 20px rgba(23,65,107,0.12);
   }
   .hint { font-size: 13px; color: var(--muted); }
-  .hint.warn { color: var(--over); font-weight: 700; }
   .spacer { margin-left: auto; }
   button.action {
     font: inherit; font-weight: 700; font-size: 14px; cursor: pointer;
@@ -167,7 +172,7 @@
   .modal-foot button { flex: 1; }
 
   /* --- dashboard: game left, formulation right --- */
-  .dash { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.92fr); gap: 18px; align-items: start; }
+  .dash { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.9fr); gap: 18px; align-items: start; }
   @media (max-width: 900px) { .dash { grid-template-columns: 1fr; } }
   .col-game { min-width: 0; }
   .col-form { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 12px 34px rgba(23,65,107,0.10); overflow: hidden; }
@@ -176,19 +181,12 @@
   .mrow { display: flex; align-items: baseline; gap: 10px; margin-bottom: 9px; }
   .mrow.sub { margin-bottom: 7px; }
   .mlabel { width: 74px; flex: none; text-align: right; font-size: 11.5px; font-style: italic; color: var(--muted); }
-  .mexpr { font-family: "Cambria Math", Cambria, Georgia, "Times New Roman", serif; font-size: 17px; color: var(--ink); white-space: nowrap; }
-  .mexpr sub { font-size: 11px; } .mexpr sup { font-size: 10px; }
+  .mexpr { font-family: "Cambria Math", Cambria, Georgia, "Times New Roman", serif; font-size: 16px; color: var(--ink); white-space: nowrap; }
+  .mexpr sub { font-size: 10px; } .mexpr sup { font-size: 10px; }
   .mnote { font-size: 11px; color: var(--muted); font-style: italic; }
   .mval { margin-left: auto; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; font-size: 18px; }
   .vardef { font-size: 11px; color: var(--muted); line-height: 1.5; border-top: 1px dashed var(--line); margin-top: 8px; padding-top: 10px; }
   .vardef sub { font-size: 9px; }
-  .ccheck { border-top: 1px dashed var(--line); padding: 13px 18px; }
-  .cc-title { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 800; margin-bottom: 11px; }
-  .cc-group { margin-bottom: 11px; }
-  .cc-h { font-size: 11.5px; color: var(--muted); display: block; margin-bottom: 7px; }
-  .cc-row { display: flex; flex-wrap: wrap; gap: 6px; }
-  .cc-chip { font-size: 12px; font-weight: 700; padding: 5px 9px; border-radius: 999px; background: var(--band-a); border: 1px solid var(--line); color: var(--muted); font-variant-numeric: tabular-nums; }
-  .cc-chip.ok { color: var(--good); border-color: var(--good); }
   .objbar { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); padding: 12px 18px; font-size: 13px; color: var(--muted); }
   .objbar b { font-size: 20px; color: var(--accent); font-variant-numeric: tabular-nums; }
 
@@ -202,45 +200,33 @@
 <div class="wrap">
   
   <div class="intro">
-    <p class="eyebrow">Route the Convoy · a.k.a. the Hitchcock transportation problem</p>
+    <p class="eyebrow">Field Resupply · the bipartite network</p>
     <h1>Transportation Problem</h1>
-    <p>Each <b>depot</b> holds a fixed supply; each <b>front-line unit</b> needs a fixed amount. Supply equals demand (a <b>balanced</b> problem).
-    Every route has a shipping cost per unit. Decide <b>how much to ship on each route</b> so every depot empties and every unit is fully supplied —
-    at the <b>lowest total cost</b>. Use −/+ in each cell, then Submit. Hit <b>New Problem</b> for a fresh board.</p>
+    <p>Two supply <b>depots</b> ship to three front-line <b>divisions</b>. Every depot can reach every division, but there is <b>no relay hub</b> —
+    that bipartite shape is exactly what makes this a transportation problem (min-cost flow with sources on one side, sinks on the other).
+    Set the flow on each road so every depot empties (&#8721; out = supply) and every division is supplied (&#8721; in = demand), at the <b>lowest</b> total cost.</p>
   </div>
 
   <div class="dash">
     <div class="col-game">
     <div class="sheet">
     <div class="pack">
-      <div class="truck">
-        <svg viewBox="0 0 130 78" xmlns="http://www.w3.org/2000/svg">
-          <g stroke="#26301b" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
-            <rect x="6" y="20" width="70" height="38" rx="4" fill="#5b6a3c"/>
-            <path d="M76 32 L96 32 L112 46 L112 58 L76 58 Z" fill="#4c5a30"/>
-            <rect x="82" y="36" width="16" height="12" rx="2" fill="#bfe0f2"/>
-            <circle cx="34" cy="60" r="9" fill="#2b2b2b"/>
-            <circle cx="34" cy="60" r="3.5" fill="#7d7d7d" stroke="none"/>
-            <circle cx="98" cy="60" r="9" fill="#2b2b2b"/>
-            <circle cx="98" cy="60" r="3.5" fill="#7d7d7d" stroke="none"/>
-            <path d="M16 30 L40 30 M16 40 L40 40" stroke="#43502b" stroke-width="2.4"/>
-          </g>
-        </svg>
-      </div>
-      <div class="readout">
-        <div class="ship" id="shipbox"><span class="k">Shipped</span><b><span id="shipped">0</span> / <span id="totsupply">0</span></b></div>
-        <div><span class="k">Total cost</span><b id="cost">0</b></div>
-        <div><span class="k">Goal</span><b style="font-size:15px">Minimize</b></div>
-      </div>
+      <div class="readout bal" id="balbox"><span class="k">Constraints met</span><b><span id="balcount">0</span> / 5</b></div>
+      <div class="readout"><span class="k">Total cost</span><b id="cost">0</b></div>
+      <div class="readout"><span class="k">Goal</span><b style="font-size:15px">Minimize</b></div>
     </div>
 
-    <div class="tablewrap">
-      <table class="grid" id="grid"></table>
+    <div class="diagram"><div class="dwrap" id="dwrap"></div></div>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--src)"></i> Supply depot (ships s<sub>i</sub>)</span>
+      <span><i class="dot" style="background:var(--snk)"></i> Division (needs d<sub>j</sub>)</span>
     </div>
+
+    <div class="balrow" id="balrow"></div>
   </div>
 
   <div class="bar">
-    <div class="hint" id="hint">Fill every route so depots empty and units are supplied.</div>
+    <div class="hint" id="hint">Balance every node so outflow minus inflow equals b (green ✓).</div>
     <div class="spacer"></div>
     <button class="action" id="reset">New Problem</button>
     <button class="action submit" id="submit" disabled>Submit</button>
@@ -251,14 +237,9 @@
       <div class="math">
         <div class="mrow"><span class="mlabel">minimize</span><span class="mexpr">&#8721;<sub>i</sub>&#8201;&#8721;<sub>j</sub> c<sub>ij</sub> y<sub>ij</sub></span><span class="mval" id="objval">0</span></div>
         <div class="mrow sub"><span class="mlabel">subject to</span><span class="mexpr">&#8721;<sub>j</sub> y<sub>ij</sub> = s<sub>i</sub></span><span class="mnote">each depot ships its supply</span></div>
-        <div class="mrow sub"><span class="mlabel"></span><span class="mexpr">&#8721;<sub>i</sub> y<sub>ij</sub> = d<sub>j</sub></span><span class="mnote">each unit gets its demand</span></div>
+        <div class="mrow sub"><span class="mlabel"></span><span class="mexpr">&#8721;<sub>i</sub> y<sub>ij</sub> = d<sub>j</sub></span><span class="mnote">each division gets its demand</span></div>
         <div class="mrow sub"><span class="mlabel"></span><span class="mexpr">y<sub>ij</sub> &#8805; 0</span></div>
-        <div class="vardef">y<sub>ij</sub> = amount shipped depot <i>i</i> &rarr; unit <i>j</i>;&nbsp; c<sub>ij</sub> = unit cost, s<sub>i</sub> = supply, d<sub>j</sub> = demand.</div>
-      </div>
-      <div class="ccheck">
-        <div class="cc-title">Constraints — live</div>
-        <div class="cc-group"><span class="cc-h">Supply shipped&nbsp; (row sums = s<sub>i</sub>)</span><div class="cc-row" id="rowcons"></div></div>
-        <div class="cc-group"><span class="cc-h">Demand met&nbsp; (column sums = d<sub>j</sub>)</span><div class="cc-row" id="colcons"></div></div>
+        <div class="vardef">y<sub>ij</sub> = amount shipped depot <i>i</i> &rarr; division <i>j</i>;&nbsp; c<sub>ij</sub> = unit cost, s<sub>i</sub> = supply, d<sub>j</sub> = demand. One balance row per node — checked live on the map.</div>
       </div>
       <div class="objbar"><span>Objective&nbsp; &#8721; c<sub>ij</sub>y<sub>ij</sub></span><b id="objbar">0</b></div>
     </aside>
@@ -276,7 +257,7 @@
       <div class="scoreline"><span>Your total cost</span><span class="n" id="myscore"></span></div>
       <div class="scoreline"><span>Optimal (lowest) cost</span><span class="n opt" id="optscore"></span></div>
       <div class="assign-list">
-        <h3>Optimal shipping plan</h3>
+        <h3>Optimal flow</h3>
         <div id="optlist"></div>
       </div>
     </div>
@@ -289,233 +270,236 @@
 </div>
 
 <script>
-  const DEPOTS = ["Depot A", "Depot B", "Depot C"];
-  const UNITS  = ["Unit 1", "Unit 2", "Unit 3"];
-  const N = DEPOTS.length, K = UNITS.length;
 
-  const crate = '<svg viewBox="0 0 24 24" width="16" height="16" style="vertical-align:-2px"><g stroke="#26301b" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="1.5" fill="#8a7a4a"/><path d="M3 6 L21 20 M21 6 L3 20" stroke-width="1.4"/></g></svg>';
-  const flag  = '<svg viewBox="0 0 24 24" width="16" height="16" style="vertical-align:-2px"><g stroke="#26301b" stroke-width="1.8" stroke-linejoin="round"><line x1="7" y1="3" x2="7" y2="21"/><path d="M7 4 L19 7 L7 12 Z" fill="#5b6a3c"/></g></svg>';
+  // nodes: 0,1 = supply depots (left) ; 2,3,4 = divisions (right)
+  const NODE = [
+    { id:"Depot A", type:"src", icon:"depot",   x:72,  y:112 },
+    { id:"Depot B", type:"src", icon:"depot",   x:72,  y:256 },
+    { id:"Div 1",   type:"snk", icon:"outpost", x:488, y:74  },
+    { id:"Div 2",   type:"snk", icon:"outpost", x:488, y:184 },
+    { id:"Div 3",   type:"snk", icon:"outpost", x:488, y:294 },
+  ];
+  // every depot -> every division (complete bipartite); px,py = hand-placed pill anchor (on the arc, spread out)
+  const ARC = [
+    { f:0, t:2, px:392, py:84  }, // A -> Div1
+    { f:0, t:3, px:212, py:136 }, // A -> Div2
+    { f:0, t:4, px:280, py:203 }, // A -> Div3
+    { f:1, t:2, px:330, py:146 }, // B -> Div1
+    { f:1, t:3, px:184, py:238 }, // B -> Div2
+    { f:1, t:4, px:302, py:276 }, // B -> Div3
+  ];
+  const M = NODE.length, E = ARC.length;
+  const VBW = 560, VBH = 372, RAD = 28;
 
-  let supply = [], demand = [], cost = [];
-  let flow = [];
-  let best = null;   // {cost, flow, greedy}
+  let supply=[], demand=[], cost=[], b=[];
+  let flow = new Array(E).fill(0);
+  let best = null;
+  const mids = [];
 
-  // ---- min-cost flow (successive shortest paths, SPFA) ----
-  function minCostFlow(n, k, sup, dem, c){
-    const V = n + k + 2, S = 0, T = V - 1;
-    const g = [], head = Array.from({length:V}, ()=>[]);
-    const add = (u,v,cap,cst) => {
-      head[u].push(g.length); g.push({to:v, cap, cost:cst});
-      head[v].push(g.length); g.push({to:u, cap:0, cost:-cst});
-    };
-    const src = i => 1 + i, snk = j => 1 + n + j;
-    for(let i=0;i<n;i++) add(S, src(i), sup[i], 0);
-    const arc = {};
-    for(let i=0;i<n;i++) for(let j=0;j<k;j++){ arc[i+'_'+j] = g.length; add(src(i), snk(j), 1e9, c[i][j]); }
-    for(let j=0;j<k;j++) add(snk(j), T, dem[j], 0);
-    let total = 0;
+  // ---- min cost flow (successive shortest paths, SPFA) ----
+  function mcnf(m, bb, arcs){
+    const S=m, T=m+1, V=m+2, g=[], head=Array.from({length:V},()=>[]);
+    const add=(u,v,cp,cs)=>{ head[u].push(g.length); g.push({to:v,cap:cp,cost:cs}); head[v].push(g.length); g.push({to:u,cap:0,cost:-cs}); };
+    const ai=[];
+    arcs.forEach(a=>{ ai.push(g.length); add(a.u,a.v,a.cap,a.cost); });
+    let tot=0;
+    for(let i=0;i<m;i++){ if(bb[i]>0){ add(S,i,bb[i],0); tot+=bb[i]; } else if(bb[i]<0){ add(i,T,-bb[i],0); } }
+    let flowv=0, costv=0;
     while(true){
-      const dist = Array(V).fill(Infinity), inq = Array(V).fill(false), pe = Array(V).fill(-1);
-      dist[S] = 0; const q = [S];
-      while(q.length){
-        const u = q.shift(); inq[u] = false;
-        for(const ei of head[u]){ const e = g[ei];
-          if(e.cap > 0 && dist[u] + e.cost < dist[e.to]){ dist[e.to] = dist[u] + e.cost; pe[e.to] = ei;
-            if(!inq[e.to]){ inq[e.to] = true; q.push(e.to); } } }
-      }
-      if(dist[T] === Infinity) break;
-      let f = Infinity;
-      for(let v=T; v!==S; ){ const ei = pe[v]; f = Math.min(f, g[ei].cap); v = g[ei^1].to; }
-      for(let v=T; v!==S; ){ const ei = pe[v]; g[ei].cap -= f; g[ei^1].cap += f; v = g[ei^1].to; }
-      total += f * dist[T];
+      const dist=Array(V).fill(Infinity), inq=Array(V).fill(false), pe=Array(V).fill(-1);
+      dist[S]=0; const q=[S];
+      while(q.length){ const u=q.shift(); inq[u]=false;
+        for(const ei of head[u]){ const e=g[ei];
+          if(e.cap>0 && dist[u]+e.cost<dist[e.to]){ dist[e.to]=dist[u]+e.cost; pe[e.to]=ei; if(!inq[e.to]){ inq[e.to]=true; q.push(e.to);} } } }
+      if(dist[T]===Infinity) break;
+      let f=Infinity; for(let v=T; v!==S; ){ const ei=pe[v]; f=Math.min(f,g[ei].cap); v=g[ei^1].to; }
+      for(let v=T; v!==S; ){ const ei=pe[v]; g[ei].cap-=f; g[ei^1].cap+=f; v=g[ei^1].to; }
+      flowv+=f; costv+=f*dist[T];
     }
-    const fl = Array.from({length:n}, ()=>Array(k).fill(0));
-    for(let i=0;i<n;i++) for(let j=0;j<k;j++){ fl[i][j] = 1e9 - g[arc[i+'_'+j]].cap; }
-    return { cost: total, flow: fl };
+    const fl = ai.map((idx,k)=> arcs[k].cap - g[idx].cap);
+    return { cost: (flowv===tot ? costv : null), flow: fl };
   }
-  function greedyLeastCost(n,k,sup,dem,c){
-    const s = sup.slice(), d = dem.slice(); let tot = 0;
-    const cells = [];
-    for(let i=0;i<n;i++) for(let j=0;j<k;j++) cells.push([c[i][j], i, j]);
-    cells.sort((a,b)=> a[0]-b[0]);
-    for(const [cc,i,j] of cells){ const f = Math.min(s[i], d[j]); if(f>0){ s[i]-=f; d[j]-=f; tot += f*cc; } }
+  // least-cost-cell heuristic (a natural first plan that is usually not optimal)
+  function greedyLC(){
+    const s=supply.slice(), d=demand.slice(); let tot=0;
+    const order=[...Array(E).keys()].sort((a,z)=>cost[a]-cost[z]);
+    for(const k of order){ const si=ARC[k].f, dj=ARC[k].t-2; const f=Math.min(s[si], d[dj]); if(f>0){ s[si]-=f; d[dj]-=f; tot+=f*cost[k]; } }
     return tot;
   }
-  function composition(parts, total, lo, hi){
+  function comp(parts,total,lo,hi){
     for(let t=0;t<2000;t++){
-      const a = []; let rem = total, ok = true;
-      for(let i=0;i<parts-1;i++){
-        const left = parts-1-i;
-        const minv = Math.max(lo, rem - hi*left);
-        const maxv = Math.min(hi, rem - lo*left);
-        if(minv > maxv){ ok = false; break; }
-        const v = minv + Math.floor(Math.random()*(maxv-minv+1));
-        a.push(v); rem -= v;
-      }
-      if(!ok) continue;
-      if(rem < lo || rem > hi) continue;
-      a.push(rem); return a;
+      const a=[]; let rem=total, ok=true;
+      for(let i=0;i<parts-1;i++){ const left=parts-1-i; const mn=Math.max(lo,rem-hi*left), mx=Math.min(hi,rem-lo*left);
+        if(mn>mx){ok=false;break;} const v=mn+Math.floor(Math.random()*(mx-mn+1)); a.push(v); rem-=v; }
+      if(!ok) continue; if(rem<lo||rem>hi) continue; a.push(rem); return a;
     }
     return null;
   }
-
   function generateProblem(){
     for(let t=0;t<6000;t++){
-      const total = 10 + Math.floor(Math.random()*5);       // 10..14 total units
-      const sup = composition(N, total, 2, 6);
-      const dem = composition(K, total, 2, 6);
-      if(!sup || !dem) continue;
-      const c = Array.from({length:N}, ()=> Array.from({length:K}, ()=> 1 + Math.floor(Math.random()*9))); // 1..9
-      const opt = minCostFlow(N, K, sup, dem, c);
-      const greedy = greedyLeastCost(N, K, sup, dem, c);
-      if(greedy <= opt.cost) continue;                       // greedy must be strictly worse (non-trivial)
-      if(greedy - opt.cost < 2) continue;                    // give a visible gap
-      supply = sup; demand = dem; cost = c;
-      best = { ...opt, greedy };
-      return;
+      const total=9+Math.floor(Math.random()*5);           // 9..13 total units
+      const sup=comp(2,total,3,10), dem=comp(3,total,2,6);
+      if(!sup||!dem) continue;
+      const c=Array.from({length:E},()=>1+Math.floor(Math.random()*9));
+      supply=sup; demand=dem; cost=c; b=[sup[0],sup[1],-dem[0],-dem[1],-dem[2]];
+      const arcs=ARC.map((a,k)=>({u:a.f,v:a.t,cap:1e9,cost:c[k]}));
+      const opt=mcnf(M,b,arcs);
+      if(opt.cost===null) continue;
+      const gr=greedyLC();
+      if(gr-opt.cost<2) continue;                           // require a real gap so it is non-trivial
+      best={ ...opt, greedy:gr }; return;
     }
-    supply = [4,5,3]; demand = [5,3,4];
-    cost = [[8,6,3],[2,7,5],[6,4,9]];
-    const opt = minCostFlow(N,K,supply,demand,cost);
-    best = { ...opt, greedy: greedyLeastCost(N,K,supply,demand,cost) };
+    supply=[7,6]; demand=[5,4,4]; cost=[8,6,3,2,7,5]; b=[7,6,-5,-4,-4];
+    const arcs=ARC.map((a,k)=>({u:a.f,v:a.t,cap:1e9,cost:cost[k]}));
+    best={ ...mcnf(M,b,arcs), greedy:greedyLC() };
   }
 
-  const grid = document.getElementById("grid");
+  const dwrap = document.getElementById("dwrap");
+  const lerp = (a,c,t)=> a+(c-a)*t;
 
-  function buildTable(){
-    let html = "";
-    // header row
-    html += '<tr><td class="corner">unit cost<br>shown top-right</td>';
-    UNITS.forEach((u,j)=>{
-      html += '<th class="colhead"><div class="h">'+flag+u+'</div><div class="req">needs '+demand[j]+'</div></th>';
+  function iconGlyph(kind, x, y){
+    const g = 'transform="translate('+x+','+y+')"';
+    if(kind==="depot"){
+      return '<g '+g+' stroke="#fff" stroke-width="2.1" fill="none" stroke-linejoin="round">'
+        + '<rect x="-11" y="-8" width="22" height="16" rx="1.5"/>'
+        + '<path d="M-11 -8 L11 8 M11 -8 L-11 8" stroke-width="1.5"/></g>';
+    }
+    return '<g '+g+' stroke="#fff" stroke-width="2" fill="none" stroke-linejoin="round" stroke-linecap="round">'
+      + '<path d="M-11 8 L0 -5 L11 8 Z"/>'
+      + '<path d="M0 -5 L0 -13"/>'
+      + '<path d="M0 -13 L8 -11 L0 -9 Z" fill="#fff"/></g>';
+  }
+
+  function build(){
+    let s = '<svg viewBox="0 0 '+VBW+' '+VBH+'" xmlns="http://www.w3.org/2000/svg">';
+    s += '<defs>'
+       + '<marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--muted)"/></marker>'
+       + '<marker id="arwF" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/></marker>'
+       + '</defs>';
+    mids.length = 0;
+    ARC.forEach((a,k)=>{
+      const f=NODE[a.f], t=NODE[a.t];
+      const dx=t.x-f.x, dy=t.y-f.y, len=Math.hypot(dx,dy), ux=dx/len, uy=dy/len;
+      const x1=f.x+ux*RAD, y1=f.y+uy*RAD, x2=t.x-ux*RAD, y2=t.y-uy*RAD;
+      s += '<line id="al'+k+'" x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="var(--muted)" stroke-width="2.5" marker-end="url(#arw)"/>';
+      mids.push({ x:a.px, y:a.py });
     });
-    html += '<th class="tot grand"><span class="req">supply</span><span class="s">Σ</span></th></tr>';
-    // depot rows
-    DEPOTS.forEach((dp,i)=>{
-      html += '<tr><th class="rowhead"><div class="h">'+crate+dp+'</div><div class="req">has '+supply[i]+'</div></th>';
-      UNITS.forEach((u,j)=>{
-        html += '<td class="cell"><div class="cost">c=<b>'+cost[i][j]+'</b></div>'
-             +  '<div class="stepper">'
-             +  '<button data-i="'+i+'" data-j="'+j+'" data-d="-1" aria-label="ship less">&minus;</button>'
-             +  '<span class="flow zero" id="f'+i+'_'+j+'">0</span>'
-             +  '<button data-i="'+i+'" data-j="'+j+'" data-d="1" aria-label="ship more">+</button>'
-             +  '</div></td>';
-      });
-      html += '<td class="tot under" id="rt'+i+'"><span class="s">0</span><span class="req">/ '+supply[i]+'</span></td></tr>';
+    NODE.forEach((n,i)=>{
+      const fill = n.type==="src"?"var(--src)":"var(--snk)";
+      s += '<g>';
+      s += '<circle id="nr'+i+'" cx="'+n.x+'" cy="'+n.y+'" r="'+RAD+'" fill="'+fill+'" stroke="#ffffff" stroke-width="3"/>';
+      s += '<ellipse cx="'+(n.x-9)+'" cy="'+(n.y-7)+'" rx="8" ry="6" fill="rgba(255,255,255,0.13)"/>';
+      s += '<ellipse cx="'+(n.x+8)+'" cy="'+(n.y+8)+'" rx="9" ry="7" fill="rgba(0,0,0,0.15)"/>';
+      s += iconGlyph(n.icon, n.x, n.y);
+      s += '</g>';
+      const isSrc = n.type==="src";
+      const word = isSrc ? "supply" : "demand";
+      const val  = isSrc ? b[i] : -b[i];
+      const vcol = isSrc ? "var(--val-supply)" : "var(--val-demand)";
+      s += '<text x="'+n.x+'" y="'+(n.y+RAD+16)+'" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--ink)">'+n.id+'</text>';
+      s += '<text x="'+n.x+'" y="'+(n.y+RAD+31)+'" text-anchor="middle" font-size="11" font-weight="700">'
+         + '<tspan fill="var(--muted)">'+word+' </tspan><tspan fill="'+vcol+'" font-size="13" font-weight="800">'+val+'</tspan></text>';
     });
-    // footer demand totals
-    html += '<tr><th class="tot grand"><span class="req">demand</span><span class="s">Σ</span></th>';
-    UNITS.forEach((u,j)=>{
-      html += '<td class="tot under" id="ct'+j+'"><span class="s">0</span><span class="req">/ '+demand[j]+'</span></td>';
+    s += '</svg>';
+
+    let ctl = "";
+    ARC.forEach((a,k)=>{
+      const L = mids[k].x / VBW * 100, T = mids[k].y / VBH * 100;
+      ctl += '<div class="arc-ctl" id="ac'+k+'" style="left:'+L+'%;top:'+T+'%">'
+           + '<div class="arc-tag"><span class="c">c=<b>'+cost[k]+'</b></span></div>'
+           + '<div class="ac-step">'
+           + '<button data-k="'+k+'" data-d="-1" aria-label="ship less">&minus;</button>'
+           + '<span class="flow zero" id="af'+k+'">0</span>'
+           + '<button data-k="'+k+'" data-d="1" aria-label="ship more">+</button>'
+           + '</div></div>';
     });
-    const totsup = supply.reduce((a,b)=>a+b,0);
-    html += '<td class="tot grand"><span class="s" id="grandflow">0</span><span class="req">/ '+totsup+'</span></td></tr>';
-    grid.innerHTML = html;
-    document.getElementById("totsupply").textContent = totsup;
+    dwrap.innerHTML = s + ctl;
+
+    document.getElementById("balrow").innerHTML = NODE.map((n,i)=>{
+      const col = n.type==="src"?"var(--src)":"var(--snk)";
+      return '<span class="balchip" id="bc'+i+'"><i class="tag" style="background:'+col+'"></i>'+n.id+' <span id="bcv'+i+'"></span></span>';
+    }).join("");
   }
 
   function render(){
-    let totCost = 0, shipped = 0;
-    const rowSum = Array(N).fill(0), colSum = Array(K).fill(0);
-    for(let i=0;i<N;i++) for(let j=0;j<K;j++){ rowSum[i]+=flow[i][j]; colSum[j]+=flow[i][j]; totCost += flow[i][j]*cost[i][j]; shipped += flow[i][j]; }
-    for(let i=0;i<N;i++) for(let j=0;j<K;j++){
-      const el = document.getElementById('f'+i+'_'+j);
-      el.textContent = flow[i][j];
-      el.classList.toggle('zero', flow[i][j]===0);
-    }
-    for(let i=0;i<N;i++){
-      const t = document.getElementById('rt'+i);
-      t.querySelector('.s').textContent = rowSum[i];
-      const ok = rowSum[i]===supply[i];
-      t.classList.toggle('ok', ok); t.classList.toggle('under', !ok);
-    }
-    for(let j=0;j<K;j++){
-      const t = document.getElementById('ct'+j);
-      t.querySelector('.s').textContent = colSum[j];
-      const ok = colSum[j]===demand[j];
-      t.classList.toggle('ok', ok); t.classList.toggle('under', !ok);
-    }
-    document.getElementById('grandflow').textContent = shipped;
-    document.getElementById('shipped').textContent = shipped;
-    document.getElementById('cost').textContent = totCost;
-    const totsup = supply.reduce((a,b)=>a+b,0);
-    const complete = shipped===totsup && rowSum.every((v,i)=>v===supply[i]) && colSum.every((v,j)=>v===demand[j]);
-    document.getElementById('shipbox').classList.toggle('done', complete);
+    const net=new Array(M).fill(0), outf=new Array(M).fill(0), inf=new Array(M).fill(0);
+    let totCost=0;
+    ARC.forEach((a,k)=>{ net[a.f]+=flow[k]; net[a.t]-=flow[k]; outf[a.f]+=flow[k]; inf[a.t]+=flow[k]; totCost += flow[k]*cost[k]; });
 
-    // enable +/- based on remaining capacity
-    document.querySelectorAll('.stepper button').forEach(b=>{
-      const i=+b.dataset.i, j=+b.dataset.j, d=+b.dataset.d;
-      if(d<0) b.disabled = flow[i][j]===0;
-      else b.disabled = rowSum[i]>=supply[i] || colSum[j]>=demand[j];
+    ARC.forEach((a,k)=>{
+      const el=document.getElementById("af"+k); el.textContent=flow[k]; el.classList.toggle("zero", flow[k]===0);
+      document.getElementById("ac"+k).classList.toggle("live", flow[k]>0);
+      const line=document.getElementById("al"+k); const on = flow[k]>0;
+      line.setAttribute("stroke", on?"var(--accent)":"var(--muted)");
+      line.setAttribute("stroke-width", on? String(2.5+Math.min(flow[k],6)) : "2.5");
+      line.setAttribute("marker-end", on?"url(#arwF)":"url(#arw)");
     });
 
-    const hint = document.getElementById('hint');
-    if(complete){ hint.textContent = "All depots emptied and units supplied — ready to submit."; hint.classList.remove('warn'); }
-    else { hint.textContent = "Fill every route so depots empty (green) and units are supplied (green)."; hint.classList.remove('warn'); }
-    document.getElementById('submit').disabled = !complete;
-    updateForm();
+    let balanced=0;
+    NODE.forEach((n,i)=>{
+      const ok = net[i]===b[i];
+      if(ok) balanced++;
+      document.getElementById("bc"+i).classList.toggle("ok", ok);
+      const want = b[i]>0?("+"+b[i]):(""+b[i]);
+      document.getElementById("bcv"+i).textContent = net[i]+" / "+want+(ok?" ✓":"");
+      const ring=document.getElementById("nr"+i);
+      ring.setAttribute("stroke", ok?"#2fd27f":"#ffffff");
+      ring.setAttribute("stroke-width", ok?"4.5":"3");
+    });
+
+    document.getElementById("balcount").textContent = balanced;
+    document.getElementById("cost").textContent = totCost;
+    document.getElementById("objval").textContent = totCost;
+    document.getElementById("objbar").textContent = totCost;
+    const complete = balanced===M;
+    document.getElementById("balbox").classList.toggle("done", complete);
+
+    dwrap.querySelectorAll(".ac-step button").forEach(bn=>{
+      const k=+bn.dataset.k, d=+bn.dataset.d, a=ARC[k];
+      if(d<0) bn.disabled = flow[k]===0;
+      else bn.disabled = outf[a.f] >= b[a.f] || inf[a.t] >= (-b[a.t]);
+    });
+
+    document.getElementById("hint").textContent = complete
+      ? "Every depot emptied and division supplied — ready to submit."
+      : "Fill the roads so each depot ships its supply and each division gets its demand (green ✓).";
+    document.getElementById("submit").disabled = !complete;
   }
 
-  grid.addEventListener('click', e => {
-    const b = e.target.closest('button'); if(!b) return;
-    const i=+b.dataset.i, j=+b.dataset.j, d=+b.dataset.d;
-    if(b.disabled) return;
-    flow[i][j] = Math.max(0, flow[i][j] + d);
+  dwrap.addEventListener("click", e=>{
+    const bn=e.target.closest(".ac-step button"); if(!bn||bn.disabled) return;
+    const k=+bn.dataset.k, d=+bn.dataset.d;
+    flow[k]=Math.max(0, flow[k]+d);
     render();
   });
 
-  function newProblem(){
-    generateProblem();
-    flow = Array.from({length:N}, ()=>Array(K).fill(0));
-    buildTable();
-    buildForm();
-    render();
-  }
-  document.getElementById('reset').onclick = newProblem;
+  function newProblem(){ generateProblem(); flow=new Array(E).fill(0); build(); render(); }
+  document.getElementById("reset").onclick = newProblem;
 
-  const overlay = document.getElementById("overlay");
+  const overlay=document.getElementById("overlay");
   function showResult(){
-    let my = 0;
-    for(let i=0;i<N;i++) for(let j=0;j<K;j++) my += flow[i][j]*cost[i][j];
-    const win = my === best.cost;
-    const head = document.getElementById("mhead");
-    head.className = "modal-head " + (win ? "win" : "lose");
-    document.getElementById("mtitle").textContent = win ? "🎖 Optimal routing!" : "Not optimal yet";
-    document.getElementById("msub").textContent = win
-      ? "You met all demand at the lowest possible cost."
-      : "A cheaper shipping plan meets the same demand.";
+    let my=0; ARC.forEach((a,k)=> my+=flow[k]*cost[k]);
+    const win = my===best.cost;
+    const head=document.getElementById("mhead");
+    head.className="modal-head "+(win?"win":"lose");
+    document.getElementById("mtitle").textContent = win?"🎖 Optimal shipping!":"Not optimal yet";
+    document.getElementById("msub").textContent = win?"You met every demand at the lowest possible cost.":"A cheaper feasible shipping plan exists.";
     document.getElementById("myscore").textContent = my;
     document.getElementById("optscore").textContent = best.cost;
-    const rows = [];
-    for(let i=0;i<N;i++) for(let j=0;j<K;j++) if(best.flow[i][j]>0){
-      rows.push('<div class="assign-row"><span>'+DEPOTS[i]+' &rarr; '+UNITS[j]+'</span><span class="b">'+best.flow[i][j]+' units &middot; c='+cost[i][j]+'</span></div>');
-    }
+    const rows=[];
+    ARC.forEach((a,k)=>{ if(best.flow[k]>0) rows.push('<div class="assign-row"><span>'+NODE[a.f].id+' &rarr; '+NODE[a.t].id+'</span><span class="b">y='+best.flow[k]+' &middot; c='+cost[k]+'</span></div>'); });
     rows.push('<div class="assign-row" style="border-top:1px dashed var(--line);margin-top:6px;padding-top:8px"><span>Total cost</span><span class="b">'+best.cost+'</span></div>');
     document.getElementById("optlist").innerHTML = rows.join("");
     document.getElementById("mnote").textContent = win
-      ? "The cheapest-route-first heuristic would cost " + best.greedy + " here — it fills the lowest-cost cell greedily and gets stuck. The transportation problem is a min-cost flow: an initial plan must be improved (stepping-stone / MODI) to reach the true optimum."
-      : "A plan costs only " + best.cost + " (yours: " + my + "). Filling the cheapest cell first is a starting point, not the answer — reroute along a loop to trade a costly shipment for cheaper ones.";
+      ? "Filling the cheapest cell first (the least-cost method) would cost "+best.greedy+" here — a good start, not the answer. Because the matrix is a bipartite incidence matrix (totally unimodular), this LP still returns whole-number shipments."
+      : "A plan costs only "+best.cost+" (yours: "+my+"). Don't just fill the cheapest road first — reroute along a loop to trade a costly shipment for two cheaper ones.";
     overlay.classList.add("open");
   }
   document.getElementById("submit").onclick = showResult;
-  document.getElementById("close").onclick = () => overlay.classList.remove("open");
-  document.getElementById("retry").onclick = () => { overlay.classList.remove("open"); flow = Array.from({length:N}, ()=>Array(K).fill(0)); render(); };
-  overlay.addEventListener("click", e => { if(e.target === overlay) overlay.classList.remove("open"); });
-
-  function buildForm(){
-    document.getElementById("rowcons").innerHTML = DEPOTS.map((d,i)=>
-      '<span class="cc-chip" id="rc'+i+'">'+d+' &#8721;=<span id="rcv'+i+'">0</span>/'+supply[i]+'</span>').join("");
-    document.getElementById("colcons").innerHTML = UNITS.map((u,j)=>
-      '<span class="cc-chip" id="cc'+j+'">'+u+' &#8721;=<span id="ccv'+j+'">0</span>/'+demand[j]+'</span>').join("");
-  }
-  function updateForm(){
-    let tot=0; const rs=Array(N).fill(0), cs=Array(K).fill(0);
-    for(let i=0;i<N;i++) for(let j=0;j<K;j++){ rs[i]+=flow[i][j]; cs[j]+=flow[i][j]; tot+=flow[i][j]*cost[i][j]; }
-    document.getElementById("objval").textContent=tot;
-    document.getElementById("objbar").textContent=tot;
-    for(let i=0;i<N;i++){ document.getElementById("rcv"+i).textContent=rs[i]; document.getElementById("rc"+i).classList.toggle("ok", rs[i]===supply[i]); }
-    for(let j=0;j<K;j++){ document.getElementById("ccv"+j).textContent=cs[j]; document.getElementById("cc"+j).classList.toggle("ok", cs[j]===demand[j]); }
-  }
+  document.getElementById("close").onclick = ()=> overlay.classList.remove("open");
+  document.getElementById("retry").onclick = ()=>{ overlay.classList.remove("open"); flow=new Array(E).fill(0); render(); };
+  overlay.addEventListener("click", e=>{ if(e.target===overlay) overlay.classList.remove("open"); });
 
   newProblem();
+
 </script>
