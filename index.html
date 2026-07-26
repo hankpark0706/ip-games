@@ -1,0 +1,103 @@
+<title>Model Games — Scan to Play</title>
+<style>
+  :root {
+    --sky-top: #cfe8fb; --sky-bot: #eaf5fd;
+    --panel: #ffffff; --line: #cfe0ee;
+    --accent: #1f5f9e; --ink: #163a5c; --muted: #5c7994;
+    --head-bg: #17416b; --head-ink: #eef6fc;
+    --card: #ffffff; --card-line: #d6e2ee;
+  }
+  :root[data-theme="dark"] {
+    --sky-top: #0c1a28; --sky-bot: #101f30;
+    --panel: #132436; --line: #274a68;
+    --accent: #8fc6f5; --ink: #dcecfa; --muted: #93b3ce;
+    --head-bg: #0a1826; --head-ink: #dcecfa;
+    --card: #14243a; --card-line: #274a68;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --sky-top: #0c1a28; --sky-bot: #101f30;
+      --panel: #132436; --line: #274a68;
+      --accent: #8fc6f5; --ink: #dcecfa; --muted: #93b3ce;
+      --head-bg: #0a1826; --head-ink: #dcecfa;
+      --card: #14243a; --card-line: #274a68;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh;
+    background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bot) 55%, var(--panel) 100%);
+    font-family: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    color: var(--ink); padding: 48px 20px 60px;
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(closest-side at 18% 16%, rgba(255,255,255,0.7), transparent 70%),
+      radial-gradient(closest-side at 82% 12%, rgba(255,255,255,0.5), transparent 70%);
+  }
+  .wrap { position: relative; z-index: 1; max-width: 940px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 34px; }
+  .eyebrow { font-size: 12.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); font-weight: 800; margin: 0 0 6px; }
+  h1 { margin: 0 0 10px; font-size: 34px; font-weight: 800; letter-spacing: -0.015em; }
+  header p { margin: 0 auto; max-width: 54ch; font-size: 14.5px; line-height: 1.6; color: var(--muted); }
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+  @media (max-width: 680px) { .grid { grid-template-columns: 1fr; } }
+  .card {
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    background: var(--card); border: 1px solid var(--card-line); border-radius: 16px;
+    padding: 22px 20px 18px; text-decoration: none; color: inherit;
+    box-shadow: 0 10px 28px rgba(23,65,107,0.14); transition: transform .12s, box-shadow .12s;
+  }
+  .card:hover { transform: translateY(-3px); box-shadow: 0 16px 38px rgba(23,65,107,0.22); }
+  .card-head { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
+  .emoji { font-size: 22px; line-height: 1; }
+  .tag { font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent);
+          background: rgba(31,95,158,0.10); border: 1px solid var(--card-line); padding: 4px 10px; border-radius: 999px; }
+  .card h2 { margin: 0 0 6px; font-size: 19px; font-weight: 800; }
+  .desc { margin: 0 0 16px; font-size: 12.5px; line-height: 1.5; color: var(--muted); max-width: 34ch; }
+  .qr { background: #fff; border: 1px solid #d6e2ee; border-radius: 12px; padding: 10px; }
+  .qr img { width: 176px; height: 176px; display: block; }
+  .url { margin-top: 12px; font-size: 9.5px; color: var(--muted); word-break: break-all; line-height: 1.4;
+          font-family: ui-monospace, Menlo, monospace; }
+  footer { text-align: center; margin-top: 34px; font-size: 12.5px; color: var(--muted); }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Integer Programming for Decision-Making</p>
+    <h1>Pick a Game — Scan to Play</h1>
+    <p>Four classic models, four phones-first puzzles. Point your camera at a code to open that game, or tap a card on this screen.</p>
+  </header>
+  <div class="grid">
+      <a class="card" href="assignment-matching.html">
+        <div class="card-head"><span class="emoji">🎖️</span><span class="tag">Assignment</span></div>
+        <h2>Matching Problem</h2>
+        <p class="desc">Assign each cadet to one branch, one-to-one, to maximize total fit.</p>
+        <div class="qr"><img src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27215%27%20height%3D%27215%27%20class%3D%27segno%27%3E%3Cg%20transform%3D%27scale%285%29%27%3E%3Cpath%20fill%3D%27%23fff%27%20d%3D%27M0%200h43v43h-43z%27%2F%3E%3Cpath%20class%3D%27qrline%27%20stroke%3D%27%2312233a%27%20d%3D%27M3%203.5h7m2%200h1m4%200h2m1%200h2m1%200h1m1%200h1m1%200h2m2%200h1m1%200h7m-37%201h1m5%200h1m2%200h1m1%200h4m1%200h1m2%200h1m1%200h1m3%200h1m1%200h1m2%200h1m5%200h1m-37%201h1m1%200h3m1%200h1m1%200h1m2%200h1m1%200h2m4%200h3m2%200h1m1%200h1m1%200h1m1%200h1m1%200h3m1%200h1m-37%201h1m1%200h3m1%200h1m1%200h1m1%200h3m2%200h3m1%200h1m2%200h1m1%200h2m4%200h1m1%200h3m1%200h1m-37%201h1m1%200h3m1%200h1m1%200h2m1%200h1m2%200h3m1%200h2m2%200h2m2%200h1m1%200h1m1%200h1m1%200h3m1%200h1m-37%201h1m5%200h1m1%200h1m3%200h3m1%200h1m1%200h1m3%200h1m1%200h4m2%200h1m5%200h1m-37%201h7m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h7m-29%201h1m1%200h3m2%200h1m10%200h1m-27%201h1m1%200h5m2%200h1m5%200h1m2%200h1m1%200h3m1%200h2m1%200h1m2%200h5m-34%201h1m1%200h3m1%200h2m1%200h3m2%200h2m4%200h1m6%200h1m2%200h1m3%200h1m-34%201h1m3%200h4m1%200h1m1%200h1m3%200h1m2%200h5m2%200h2m2%200h1m2%200h3m-36%201h1m2%200h2m1%200h4m3%200h1m1%200h1m4%200h3m3%200h1m2%200h3m3%200h1m-37%201h3m1%200h1m1%200h2m2%200h1m2%200h2m1%200h2m2%200h1m1%200h2m1%200h1m2%200h3m1%200h5m-36%201h3m4%200h3m1%200h1m3%200h6m1%200h1m1%200h2m1%200h1m2%200h1m-32%201h3m1%200h3m2%200h4m2%200h3m2%200h2m3%200h5m1%200h3m1%200h2m-37%201h2m1%200h1m3%200h2m1%200h1m1%200h1m1%200h2m1%200h2m2%200h2m1%200h1m2%200h1m1%200h4m2%200h2m-37%201h9m5%200h3m2%200h1m1%200h1m1%200h5m1%200h2m1%200h1m1%200h1m-34%201h3m3%200h1m2%200h1m1%200h1m2%200h1m2%200h1m1%200h3m1%200h1m3%200h1m5%200h2m-33%201h1m1%200h4m1%200h1m3%200h3m1%200h2m4%200h4m2%200h1m2%200h4m-36%201h1m3%200h1m1%200h1m1%200h2m4%200h1m3%200h3m2%200h1m1%200h2m1%200h3m4%200h1m-36%201h1m1%200h4m2%200h1m3%200h1m1%200h1m1%200h1m1%200h1m4%200h2m3%200h2m1%200h3m-35%201h1m1%200h1m2%200h1m2%200h1m2%200h1m1%200h1m2%200h1m1%200h3m2%200h1m1%200h2m1%200h1m4%200h1m-34%201h1m1%200h2m1%200h8m2%200h2m1%200h1m1%200h1m1%200h1m4%200h1m2%200h4m1%200h2m-30%201h1m4%200h1m1%200h1m1%200h1m2%200h2m2%200h1m3%200h1m1%200h4m2%200h1m-35%201h1m1%200h4m4%200h1m6%200h5m1%200h4m1%200h4m1%200h1m1%200h1m-37%201h4m4%200h1m1%200h1m2%200h1m1%200h3m6%200h1m1%200h1m1%200h2m1%200h1m2%200h1m-35%201h1m1%200h1m2%200h3m2%200h1m2%200h1m6%200h1m1%200h1m1%200h1m2%200h3m2%200h1m2%200h2m-37%201h1m1%200h1m6%200h1m3%200h2m1%200h1m4%200h1m9%200h2m3%200h1m-37%201h1m1%200h1m1%200h3m1%200h2m3%200h1m3%200h1m4%200h4m1%200h8m1%200h1m-29%201h2m2%200h1m1%200h1m2%200h3m1%200h1m1%200h1m2%200h1m1%200h1m3%200h2m1%200h1m-36%201h7m3%200h1m4%200h3m2%200h2m2%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h3m-37%201h1m5%200h1m1%200h1m1%200h1m1%200h1m4%200h7m4%200h1m3%200h2m1%200h1m-36%201h1m1%200h3m1%200h1m1%200h1m2%200h1m1%200h1m1%200h2m2%200h1m1%200h1m1%200h10m1%200h1m1%200h1m-37%201h1m1%200h3m1%200h1m1%200h3m3%200h2m2%200h1m1%200h1m1%200h2m4%200h3m1%200h1m3%200h1m-37%201h1m1%200h3m1%200h1m1%200h1m2%200h2m2%200h2m2%200h1m1%200h1m3%200h4m6%200h2m-37%201h1m5%200h1m2%200h1m2%200h1m2%200h1m3%200h4m4%200h4m1%200h1m3%200h1m-37%201h7m1%200h2m2%200h2m1%200h3m1%200h1m2%200h4m4%200h1m1%200h5%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E" alt="QR code to open Matching Problem"/></div>
+        <div class="url">hankpark0706.github.io/ip-games/assignment-matching.html</div>
+      </a>
+      <a class="card" href="knapsack.html">
+        <div class="card-head"><span class="emoji">🎒</span><span class="tag">0/1 Knapsack</span></div>
+        <h2>Knapsack Problem</h2>
+        <p class="desc">Pack the rucksack under a weight limit to maximize mission value.</p>
+        <div class="qr"><img src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27195%27%20height%3D%27195%27%20class%3D%27segno%27%3E%3Cg%20transform%3D%27scale%285%29%27%3E%3Cpath%20fill%3D%27%23fff%27%20d%3D%27M0%200h39v39h-39z%27%2F%3E%3Cpath%20class%3D%27qrline%27%20stroke%3D%27%2312233a%27%20d%3D%27M3%203.5h7m3%200h1m1%200h2m2%200h6m1%200h1m2%200h7m-33%201h1m5%200h1m3%200h7m7%200h1m1%200h1m5%200h1m-33%201h1m1%200h3m1%200h1m1%200h6m1%200h1m2%200h5m1%200h1m1%200h1m1%200h3m1%200h1m-33%201h1m1%200h3m1%200h1m1%200h3m1%200h1m1%200h1m1%200h1m1%200h2m2%200h1m3%200h1m1%200h3m1%200h1m-33%201h1m1%200h3m1%200h1m1%200h2m1%200h3m1%200h1m2%200h4m1%200h1m2%200h1m1%200h3m1%200h1m-33%201h1m5%200h1m1%200h3m2%200h5m2%200h2m2%200h1m1%200h1m5%200h1m-33%201h7m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h7m-25%201h5m1%200h2m4%200h3m1%200h1m-25%201h1m1%200h5m6%200h1m1%200h1m1%200h1m1%200h1m2%200h1m3%200h5m-31%201h3m4%200h1m3%200h1m4%200h1m1%200h2m1%200h3m2%200h2m1%200h2m1%200h1m-32%201h1m3%200h2m2%200h1m1%200h2m2%200h1m2%200h1m2%200h1m6%200h1m1%200h1m-30%201h3m1%200h1m2%200h1m1%200h3m1%200h1m1%200h1m1%200h9m1%200h3m-29%201h1m1%200h1m1%200h7m5%200h1m3%200h2m4%200h2m-28%201h3m4%200h1m1%200h11m1%200h1m2%200h1m2%200h1m1%200h2m-33%201h7m2%200h2m1%200h2m4%200h1m6%200h2m2%200h3m-32%201h3m1%200h2m7%200h1m2%200h1m3%200h2m2%200h3m2%200h2m-29%201h1m3%200h1m4%200h1m1%200h1m3%200h1m2%200h1m1%200h1m1%200h2m1%200h2m3%200h1m-33%201h1m1%200h4m1%200h3m2%200h1m4%200h1m1%200h1m1%200h1m1%200h1m2%200h2m1%200h4m-33%201h2m2%200h5m2%200h5m1%200h1m6%200h5m1%200h2m-29%201h1m1%200h1m1%200h1m1%200h3m5%200h2m2%200h3m1%200h7m-32%201h3m1%200h1m1%200h1m3%200h2m2%200h3m3%200h1m1%200h4m1%200h3m2%200h1m-33%201h2m3%200h1m2%200h3m2%200h3m2%200h3m2%200h1m2%200h1m2%200h2m1%200h1m-33%201h1m1%200h1m1%200h1m1%200h1m1%200h2m1%200h1m1%200h4m7%200h1m1%200h1m2%200h1m1%200h1m-32%201h1m1%200h1m1%200h1m2%200h1m2%200h1m1%200h1m2%200h1m2%200h1m2%200h3m4%200h4m-32%201h1m1%200h2m1%200h2m5%200h1m1%200h2m1%200h1m1%200h2m2%200h6m2%200h1m-24%201h2m1%200h1m1%200h2m1%200h1m1%200h2m2%200h1m1%200h1m3%200h1m1%200h1m1%200h1m-33%201h7m2%200h2m1%200h1m2%200h2m1%200h1m1%200h1m2%200h2m1%200h1m1%200h1m1%200h2m-32%201h1m5%200h1m1%200h3m3%200h3m2%200h6m3%200h5m-33%201h1m1%200h3m1%200h1m1%200h5m2%200h1m2%200h1m5%200h6m1%200h2m-33%201h1m1%200h3m1%200h1m1%200h1m1%200h4m1%200h3m1%200h3m1%200h3m2%200h1m1%200h3m-33%201h1m1%200h3m1%200h1m1%200h2m2%200h1m1%200h1m3%200h1m2%200h1m2%200h1m1%200h2m1%200h2m-31%201h1m5%200h1m3%200h2m4%200h1m1%200h4m4%200h1m1%200h3m-31%201h7m1%200h1m2%200h1m2%200h1m1%200h2m1%200h2m2%200h5m3%200h1%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E" alt="QR code to open Knapsack Problem"/></div>
+        <div class="url">hankpark0706.github.io/ip-games/knapsack.html</div>
+      </a>
+      <a class="card" href="transportation.html">
+        <div class="card-head"><span class="emoji">🚚</span><span class="tag">Transportation</span></div>
+        <h2>Transportation Problem</h2>
+        <p class="desc">Ship from depots to units meeting all demand at lowest cost.</p>
+        <div class="qr"><img src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27195%27%20height%3D%27195%27%20class%3D%27segno%27%3E%3Cg%20transform%3D%27scale%285%29%27%3E%3Cpath%20fill%3D%27%23fff%27%20d%3D%27M0%200h39v39h-39z%27%2F%3E%3Cpath%20class%3D%27qrline%27%20stroke%3D%27%2312233a%27%20d%3D%27M3%203.5h7m2%200h1m2%200h1m1%200h1m3%200h1m2%200h2m3%200h7m-33%201h1m5%200h1m1%200h1m2%200h1m1%200h2m1%200h2m3%200h1m2%200h1m1%200h1m5%200h1m-33%201h1m1%200h3m1%200h1m1%200h1m2%200h3m1%200h1m3%200h4m1%200h1m1%200h1m1%200h3m1%200h1m-33%201h1m1%200h3m1%200h1m1%200h2m2%200h1m2%200h3m1%200h3m4%200h1m1%200h3m1%200h1m-33%201h1m1%200h3m1%200h1m2%200h1m2%200h2m1%200h1m2%200h6m2%200h1m1%200h3m1%200h1m-33%201h1m5%200h1m3%200h5m2%200h1m2%200h1m3%200h1m1%200h1m5%200h1m-33%201h7m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h7m-25%201h3m3%200h1m7%200h2m-24%201h1m5%200h1m1%200h1m1%200h1m1%200h2m1%200h1m1%200h1m1%200h1m2%200h2m1%200h2m2%200h3m-32%201h1m1%200h3m3%200h2m4%200h2m1%200h4m2%200h1m4%200h3m-31%201h1m1%200h1m1%200h3m1%200h1m3%200h1m2%200h1m1%200h1m3%200h1m6%200h1m1%200h1m-30%201h3m1%200h1m3%200h1m1%200h1m2%200h3m1%200h3m2%200h8m-29%201h3m1%200h1m1%200h1m1%200h5m1%200h1m1%200h3m3%200h3m4%200h2m-32%201h5m1%200h3m3%200h2m2%200h4m2%200h1m2%200h2m1%200h1m1%200h2m-31%201h1m2%200h4m4%200h1m1%200h1m2%200h1m6%200h2m2%200h3m-31%201h1m5%200h1m2%200h2m10%200h1m1%200h2m1%200h4m1%200h1m-30%201h1m1%200h2m5%200h1m1%200h1m2%200h1m2%200h1m1%200h1m1%200h2m1%200h2m3%200h1m-32%201h1m1%200h1m1%200h1m3%200h1m2%200h1m1%200h2m1%200h1m1%200h1m1%200h1m1%200h1m2%200h1m2%200h4m-32%201h1m2%200h1m1%200h1m1%200h1m1%200h1m4%200h2m2%200h2m2%200h2m2%200h1m1%200h2m1%200h1m-33%201h1m3%200h2m2%200h1m2%200h2m1%200h2m2%200h1m3%200h2m1%200h2m1%200h4m-31%201h1m1%200h1m1%200h3m1%200h3m1%200h3m1%200h1m2%200h1m1%200h4m1%200h3m2%200h1m-33%201h2m1%200h1m1%200h1m2%200h4m1%200h3m2%200h2m1%200h1m1%200h1m1%200h1m1%200h4m-31%201h1m1%200h1m1%200h1m1%200h1m8%200h2m3%200h1m3%200h1m1%200h1m2%200h1m1%200h1m-32%201h1m2%200h3m2%200h2m2%200h3m1%200h1m1%200h1m3%200h3m2%200h6m-33%201h2m1%200h1m1%200h2m7%200h1m1%200h1m2%200h1m2%200h8m1%200h1m-24%201h1m1%200h3m1%200h6m2%200h1m1%200h1m3%200h1m1%200h1m1%200h1m-33%201h7m2%200h2m2%200h4m1%200h1m1%200h1m2%200h2m1%200h1m1%200h1m1%200h2m-32%201h1m5%200h1m3%200h3m5%200h2m2%200h3m3%200h4m-32%201h1m1%200h3m1%200h1m5%200h4m1%200h1m4%200h1m1%200h6m1%200h2m-33%201h1m1%200h3m1%200h1m4%200h1m1%200h1m1%200h3m1%200h2m1%200h4m1%200h2m1%200h3m-33%201h1m1%200h3m1%200h1m3%200h1m4%200h11m1%200h2m1%200h3m-33%201h1m5%200h1m2%200h1m2%200h1m1%200h1m1%200h1m1%200h1m1%200h1m2%200h1m1%200h1m1%200h4m-31%201h7m1%200h4m2%200h4m2%200h1m2%200h2m2%200h1m3%200h1%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E" alt="QR code to open Transportation Problem"/></div>
+        <div class="url">hankpark0706.github.io/ip-games/transportation.html</div>
+      </a>
+      <a class="card" href="min-cost-network-flow.html">
+        <div class="card-head"><span class="emoji">🕸️</span><span class="tag">Network Flow</span></div>
+        <h2>Minimum Cost Network Flow</h2>
+        <p class="desc">Route flow across a network so every node balances, at minimum cost.</p>
+        <div class="qr"><img src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27215%27%20height%3D%27215%27%20class%3D%27segno%27%3E%3Cg%20transform%3D%27scale%285%29%27%3E%3Cpath%20fill%3D%27%23fff%27%20d%3D%27M0%200h43v43h-43z%27%2F%3E%3Cpath%20class%3D%27qrline%27%20stroke%3D%27%2312233a%27%20d%3D%27M3%203.5h7m2%200h1m2%200h1m1%200h1m2%200h2m1%200h1m3%200h2m2%200h1m1%200h7m-37%201h1m5%200h1m2%200h2m1%200h1m2%200h2m2%200h1m1%200h1m2%200h2m1%200h1m2%200h1m5%200h1m-37%201h1m1%200h3m1%200h1m1%200h1m2%200h1m1%200h3m3%200h3m2%200h1m1%200h1m1%200h1m1%200h1m1%200h3m1%200h1m-37%201h1m1%200h3m1%200h1m1%200h1m1%200h3m1%200h1m2%200h1m1%200h1m2%200h1m1%200h2m1%200h1m2%200h1m1%200h3m1%200h1m-37%201h1m1%200h3m1%200h1m1%200h2m1%200h2m1%200h1m3%200h2m2%200h2m1%200h2m1%200h1m1%200h1m1%200h3m1%200h1m-37%201h1m5%200h1m1%200h1m1%200h1m1%200h5m1%200h1m3%200h1m1%200h1m1%200h2m2%200h1m5%200h1m-37%201h7m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h7m-29%201h1m1%200h5m-15%201h1m1%200h5m2%200h2m3%200h2m2%200h1m1%200h3m1%200h4m2%200h5m-34%201h1m3%200h1m4%200h1m1%200h5m4%200h1m2%200h1m3%200h2m1%200h1m1%200h1m1%200h1m-34%201h2m1%200h3m2%200h2m5%200h1m2%200h3m1%200h1m2%200h2m2%200h1m2%200h3m-37%201h1m6%200h2m5%200h1m1%200h1m4%200h2m4%200h2m1%200h2m4%200h1m-37%201h1m1%200h1m1%200h3m4%200h1m1%200h2m2%200h1m2%200h1m1%200h2m1%200h1m2%200h3m1%200h5m-36%201h2m1%200h2m1%200h2m1%200h3m1%200h1m1%200h6m1%200h1m1%200h2m1%200h1m2%200h1m-30%201h2m2%200h8m1%200h3m2%200h2m3%200h9m1%200h2m-35%201h2m3%200h1m1%200h1m2%200h2m1%200h4m2%200h2m1%200h1m1%200h2m2%200h3m2%200h2m-33%201h3m1%200h2m1%200h1m4%200h1m2%200h1m1%200h1m1%200h5m1%200h2m1%200h1m1%200h2m-35%201h3m4%200h8m2%200h1m1%200h4m2%200h1m2%200h1m1%200h1m2%200h2m-34%201h1m1%200h3m2%200h2m1%200h1m2%200h2m1%200h2m5%200h4m1%200h1m1%200h1m1%200h3m-35%201h1m1%200h2m1%200h2m2%200h1m3%200h1m3%200h3m4%200h1m2%200h4m3%200h1m-37%201h2m1%200h2m1%200h4m1%200h1m1%200h3m1%200h1m1%200h1m3%200h3m3%200h2m1%200h1m1%200h1m-35%201h6m1%200h1m3%200h1m1%200h2m1%200h1m1%200h3m2%200h1m2%200h1m1%200h1m4%200h1m-32%201h1m3%200h1m3%200h4m1%200h2m1%200h1m1%200h1m1%200h1m2%200h3m1%200h5m2%200h1m-36%201h2m2%200h1m1%200h2m3%200h3m1%200h1m2%200h2m2%200h1m2%200h2m1%200h1m1%200h2m-33%201h2m1%200h2m1%200h6m1%200h1m4%200h5m1%200h2m1%200h1m1%200h2m1%200h1m1%200h2m-36%201h2m2%200h1m4%200h2m3%200h4m5%200h1m4%200h1m2%200h1m1%200h1m-34%201h1m2%200h1m2%200h1m2%200h3m1%200h1m6%200h1m1%200h1m1%200h1m2%200h1m1%200h1m1%200h1m2%200h3m-37%201h1m1%200h1m4%200h2m1%200h2m2%200h1m1%200h1m4%200h1m9%200h2m-33%201h1m1%200h1m1%200h1m1%200h5m1%200h3m2%200h1m4%200h1m1%200h2m1%200h6m1%200h1m1%200h1m-29%201h3m2%200h2m2%200h3m1%200h1m1%200h1m1%200h2m1%200h1m3%200h2m-34%201h7m2%200h5m1%200h3m2%200h2m2%200h3m1%200h1m1%200h1m1%200h1m1%200h3m-37%201h1m5%200h1m1%200h3m1%200h1m4%200h7m4%200h1m3%200h2m1%200h2m-37%201h1m1%200h3m1%200h1m1%200h1m1%200h1m2%200h1m1%200h2m2%200h1m1%200h1m1%200h1m1%200h8m1%200h1m-35%201h1m1%200h3m1%200h1m1%200h2m1%200h1m1%200h3m2%200h1m1%200h1m1%200h2m4%200h3m1%200h1m3%200h1m-37%201h1m1%200h3m1%200h1m1%200h1m1%200h3m2%200h2m2%200h1m1%200h1m2%200h5m4%200h1m1%200h2m-37%201h1m5%200h1m2%200h2m2%200h1m1%200h1m3%200h4m1%200h1m3%200h2m2%200h2m2%200h1m-37%201h7m1%200h1m1%200h2m1%200h1m1%200h3m1%200h1m2%200h4m3%200h1m2%200h5%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E" alt="QR code to open Minimum Cost Network Flow"/></div>
+        <div class="url">hankpark0706.github.io/ip-games/min-cost-network-flow.html</div>
+      </a>
+  </div>
+  <footer>Each game runs entirely in your browser — no login, no install.</footer>
+</div>

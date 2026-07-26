@@ -1,0 +1,399 @@
+<title>Knapsack Problem</title>
+<style>
+  :root {
+    --sky-top: #cfe8fb; --sky-bot: #eaf5fd;
+    --panel: #ffffff; --line: #cfe0ee;
+    --band-a: #eaf4fc; --band-b: #ffffff;
+    --accent: #1f5f9e; --ink: #163a5c; --muted: #5c7994;
+    --head-bg: #17416b; --head-ink: #eef6fc;
+    --ring: #3f7cae;
+    --sel-bg: #e4f0fb; --sel-border: #1f6fb2;
+    --hover: #f1f7fd;
+    --good: #2e8b57; --over: #c2603a;
+  }
+  :root[data-theme="dark"] {
+    --sky-top: #0c1a28; --sky-bot: #101f30;
+    --panel: #132436; --line: #274a68;
+    --band-a: #18324b; --band-b: #132436;
+    --accent: #8fc6f5; --ink: #dcecfa; --muted: #93b3ce;
+    --head-bg: #0a1826; --head-ink: #dcecfa;
+    --ring: #5b9bd0;
+    --sel-bg: #1c3a54; --sel-border: #5b9bd0;
+    --hover: #182f45;
+    --good: #67c896; --over: #e08a63;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --sky-top: #0c1a28; --sky-bot: #101f30;
+      --panel: #132436; --line: #274a68;
+      --band-a: #18324b; --band-b: #132436;
+      --accent: #8fc6f5; --ink: #dcecfa; --muted: #93b3ce;
+      --head-bg: #0a1826; --head-ink: #dcecfa;
+      --ring: #5b9bd0;
+      --sel-bg: #1c3a54; --sel-border: #5b9bd0;
+      --hover: #182f45;
+      --good: #67c896; --over: #e08a63;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh;
+    background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bot) 55%, var(--panel) 100%);
+    display: flex; justify-content: center; align-items: flex-start; padding: 44px 16px;
+    font-family: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    color: var(--ink);
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(closest-side at 18% 20%, rgba(255,255,255,0.7), transparent 70%),
+      radial-gradient(closest-side at 80% 12%, rgba(255,255,255,0.55), transparent 70%),
+      radial-gradient(closest-side at 60% 26%, rgba(255,255,255,0.45), transparent 70%);
+  }
+  .wrap { position: relative; z-index: 1; width: 100%; max-width: 780px; }
+  .intro { margin: 0 2px 14px; }
+  .eyebrow { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin: 0 0 4px; }
+  .intro h1 { margin: 0 0 6px; font-size: 24px; font-weight: 800; letter-spacing: -0.01em; }
+  .intro p { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--muted); }
+
+  .sheet {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; overflow: hidden; box-shadow: 0 12px 34px rgba(23,65,107,0.18);
+  }
+
+  /* pack panel */
+  .pack {
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+    padding: 20px 22px; background: var(--head-bg); color: var(--head-ink);
+    border-bottom: 3px solid var(--ring);
+  }
+  .ruck { width: 96px; flex: none; }
+  .ruck svg { width: 100%; height: auto; display: block; filter: drop-shadow(0 3px 5px rgba(0,0,0,0.28)); }
+  .gauge-col { flex: 1; min-width: 220px; }
+  .cap-label { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85; margin-bottom: 8px; }
+  .gauge {
+    height: 16px; border-radius: 999px; background: rgba(255,255,255,0.16);
+    overflow: hidden; border: 1px solid rgba(255,255,255,0.22);
+  }
+  .gauge .fill {
+    height: 100%; width: 0; border-radius: 999px;
+    background: linear-gradient(90deg, #5aa9e0, #8fd0ff);
+    transition: width .18s ease, background .18s ease;
+  }
+  .gauge.over .fill { background: linear-gradient(90deg, #d9714a, #f0a07a); }
+  .readout { display: flex; gap: 22px; margin-top: 12px; font-size: 14px; flex-wrap: wrap; }
+  .readout .k { opacity: 0.8; }
+  .readout b { font-size: 19px; font-variant-numeric: tabular-nums; }
+  .readout .wt.over { color: #ffd7c6; }
+
+  /* item grid */
+  .grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 18px;
+  }
+  @media (max-width: 560px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  .item {
+    position: relative; cursor: pointer; font: inherit; text-align: center;
+    background: var(--band-a); border: 2px solid var(--line); border-radius: 12px;
+    padding: 14px 8px 12px; color: var(--ink);
+    transition: background .12s, border-color .12s, transform .06s, box-shadow .12s;
+  }
+  .item:hover { background: var(--hover); }
+  .item:active { transform: scale(0.97); }
+  .item.sel {
+    background: var(--sel-bg); border-color: var(--sel-border);
+    box-shadow: 0 4px 12px rgba(23,65,107,0.22);
+  }
+  .item:focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
+  .item .ico { height: 58px; display: flex; align-items: center; justify-content: center; margin-bottom: 6px; }
+  .item .ico svg { height: 100%; width: auto; }
+  .item .iname { font-size: 14px; font-weight: 800; margin-bottom: 6px; }
+  .item .stats { display: flex; justify-content: center; gap: 10px; font-size: 12.5px; font-weight: 700; }
+  .item .stats .wt { color: var(--muted); }
+  .item .stats .val { color: var(--accent); }
+  .check {
+    position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border-radius: 50%;
+    background: var(--sel-border); color: #fff; font-size: 14px; font-weight: 800;
+    display: none; align-items: center; justify-content: center; line-height: 1;
+  }
+  .item.sel .check { display: flex; }
+
+  .bar {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 14px 18px; margin-top: 14px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(23,65,107,0.12);
+  }
+  .hint { font-size: 13px; color: var(--muted); }
+  .hint.warn { color: var(--over); font-weight: 700; }
+  .spacer { margin-left: auto; }
+  button.action {
+    font: inherit; font-weight: 700; font-size: 14px; cursor: pointer;
+    padding: 9px 18px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--band-a); color: var(--ink); transition: filter .12s;
+  }
+  button.action:hover { filter: brightness(0.96); }
+  button.submit { background: var(--head-bg); color: var(--head-ink); border-color: var(--head-bg); }
+  button.submit:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  /* modal */
+  .overlay {
+    position: fixed; inset: 0; z-index: 10; display: none;
+    align-items: center; justify-content: center; padding: 20px;
+    background: rgba(12,26,40,0.55); backdrop-filter: blur(3px);
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    width: 100%; max-width: 460px; background: var(--panel);
+    border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+    box-shadow: 0 24px 60px rgba(12,26,40,0.4); animation: pop .2s ease;
+  }
+  @keyframes pop { from { transform: translateY(12px) scale(0.97); opacity: 0; } to { transform: none; opacity: 1; } }
+  .modal-head { padding: 18px 22px; color: #fff; }
+  .modal-head.win { background: linear-gradient(135deg, #2e8b57, #1f6b45); }
+  .modal-head.lose { background: linear-gradient(135deg, #17416b, #0f2c49); }
+  .modal-head h2 { margin: 0; font-size: 20px; font-weight: 800; }
+  .modal-head p { margin: 4px 0 0; font-size: 13px; opacity: 0.9; }
+  .modal-body { padding: 18px 22px 8px; }
+  .scoreline { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; font-size: 14px; }
+  .scoreline .n { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .scoreline .n.opt { color: var(--good); }
+  .assign-list { margin: 8px 0 4px; border-top: 1px dashed var(--line); padding-top: 12px; }
+  .assign-list h3 { margin: 0 0 8px; font-size: 12px; letter-spacing: 0.04em; color: var(--muted); text-transform: uppercase; }
+  .assign-row { display: flex; justify-content: space-between; font-size: 14px; padding: 4px 0; }
+  .assign-row span:first-child { font-weight: 700; }
+  .assign-row .b { color: var(--accent); font-weight: 700; }
+  .note { font-size: 12.5px; color: var(--muted); line-height: 1.55; padding: 6px 22px 4px; }
+  .modal-foot { padding: 12px 22px 20px; display: flex; gap: 10px; }
+  .modal-foot button { flex: 1; }
+
+  /* --- Scan-to-play QR: sits in the gutter beside the sheet on wide screens, stacks on narrow --- */
+  .qr-card {
+    position: fixed; top: 44px; left: calc(50% + 390px + 22px);
+    width: 232px; z-index: 50;
+    background: #ffffff; border: 1px solid #d6e2ee; border-radius: 14px;
+    padding: 16px 16px 12px; text-align: center; box-shadow: 0 12px 30px rgba(23,65,107,0.24);
+  }
+  .qr-card .qr-title { font-size: 15px; font-weight: 800; color: #17416b; margin-bottom: 11px; letter-spacing: 0.01em; }
+  .qr-card .qr-img { width: 200px; height: 200px; display: block; margin: 0 auto; }
+  .qr-card .qr-url { font-size: 9.5px; color: #5c7994; margin-top: 11px; word-break: break-all; line-height: 1.4; font-family: ui-monospace, Menlo, monospace; }
+  @media (max-width: 1300px) {
+    .qr-card { position: static; left: auto; top: auto; width: 230px; margin: 0 auto 18px; }
+  }
+  </style>
+
+<div class="wrap">
+  <div class="qr-card"><div class="qr-title">📱 Scan to play</div><img class="qr-img" src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27195%27%20height%3D%27195%27%20class%3D%27segno%27%3E%3Cg%20transform%3D%27scale%285%29%27%3E%3Cpath%20fill%3D%27%23fff%27%20d%3D%27M0%200h39v39h-39z%27%2F%3E%3Cpath%20class%3D%27qrline%27%20stroke%3D%27%2312233a%27%20d%3D%27M3%203.5h7m3%200h1m1%200h2m2%200h6m1%200h1m2%200h7m-33%201h1m5%200h1m3%200h7m7%200h1m1%200h1m5%200h1m-33%201h1m1%200h3m1%200h1m1%200h6m1%200h1m2%200h5m1%200h1m1%200h1m1%200h3m1%200h1m-33%201h1m1%200h3m1%200h1m1%200h3m1%200h1m1%200h1m1%200h1m1%200h2m2%200h1m3%200h1m1%200h3m1%200h1m-33%201h1m1%200h3m1%200h1m1%200h2m1%200h3m1%200h1m2%200h4m1%200h1m2%200h1m1%200h3m1%200h1m-33%201h1m5%200h1m1%200h3m2%200h5m2%200h2m2%200h1m1%200h1m5%200h1m-33%201h7m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h7m-25%201h5m1%200h2m4%200h3m1%200h1m-25%201h1m1%200h5m6%200h1m1%200h1m1%200h1m1%200h1m2%200h1m3%200h5m-31%201h3m4%200h1m3%200h1m4%200h1m1%200h2m1%200h3m2%200h2m1%200h2m1%200h1m-32%201h1m3%200h2m2%200h1m1%200h2m2%200h1m2%200h1m2%200h1m6%200h1m1%200h1m-30%201h3m1%200h1m2%200h1m1%200h3m1%200h1m1%200h1m1%200h9m1%200h3m-29%201h1m1%200h1m1%200h7m5%200h1m3%200h2m4%200h2m-28%201h3m4%200h1m1%200h11m1%200h1m2%200h1m2%200h1m1%200h2m-33%201h7m2%200h2m1%200h2m4%200h1m6%200h2m2%200h3m-32%201h3m1%200h2m7%200h1m2%200h1m3%200h2m2%200h3m2%200h2m-29%201h1m3%200h1m4%200h1m1%200h1m3%200h1m2%200h1m1%200h1m1%200h2m1%200h2m3%200h1m-33%201h1m1%200h4m1%200h3m2%200h1m4%200h1m1%200h1m1%200h1m1%200h1m2%200h2m1%200h4m-33%201h2m2%200h5m2%200h5m1%200h1m6%200h5m1%200h2m-29%201h1m1%200h1m1%200h1m1%200h3m5%200h2m2%200h3m1%200h7m-32%201h3m1%200h1m1%200h1m3%200h2m2%200h3m3%200h1m1%200h4m1%200h3m2%200h1m-33%201h2m3%200h1m2%200h3m2%200h3m2%200h3m2%200h1m2%200h1m2%200h2m1%200h1m-33%201h1m1%200h1m1%200h1m1%200h1m1%200h2m1%200h1m1%200h4m7%200h1m1%200h1m2%200h1m1%200h1m-32%201h1m1%200h1m1%200h1m2%200h1m2%200h1m1%200h1m2%200h1m2%200h1m2%200h3m4%200h4m-32%201h1m1%200h2m1%200h2m5%200h1m1%200h2m1%200h1m1%200h2m2%200h6m2%200h1m-24%201h2m1%200h1m1%200h2m1%200h1m1%200h2m2%200h1m1%200h1m3%200h1m1%200h1m1%200h1m-33%201h7m2%200h2m1%200h1m2%200h2m1%200h1m1%200h1m2%200h2m1%200h1m1%200h1m1%200h2m-32%201h1m5%200h1m1%200h3m3%200h3m2%200h6m3%200h5m-33%201h1m1%200h3m1%200h1m1%200h5m2%200h1m2%200h1m5%200h6m1%200h2m-33%201h1m1%200h3m1%200h1m1%200h1m1%200h4m1%200h3m1%200h3m1%200h3m2%200h1m1%200h3m-33%201h1m1%200h3m1%200h1m1%200h2m2%200h1m1%200h1m3%200h1m2%200h1m2%200h1m1%200h2m1%200h2m-31%201h1m5%200h1m3%200h2m4%200h1m1%200h4m4%200h1m1%200h3m-31%201h7m1%200h1m2%200h1m2%200h1m1%200h2m1%200h2m2%200h5m3%200h1%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E" alt="QR code to open the game on a phone"/><div class="qr-url">hankpark0706.github.io/ip-games/knapsack.html</div></div>
+  
+  <div class="intro">
+    <p class="eyebrow">Pack the Rucksack</p>
+    <h1>Knapsack Problem</h1>
+    <p>Your rucksack has a <b>weight capacity</b>. Each piece of gear has a weight (kg) and a mission value (pts).
+    Choose which items to pack — <b>without exceeding the capacity</b> — to <b>maximize total value</b>.
+    Click gear to pack or unpack, then Submit. Hit <b>New Problem</b> for a fresh, randomly generated loadout.</p>
+  </div>
+
+  <div class="sheet">
+    <div class="pack">
+      <div class="ruck">
+        <svg viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg">
+          <g stroke="#26301b" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round">
+            <path d="M42 32 Q30 72 47 110" fill="none"/>
+            <path d="M78 32 Q90 72 73 110" fill="none"/>
+            <rect x="26" y="36" width="68" height="90" rx="20" fill="#5b6a3c"/>
+            <path d="M26 62 q-12 2 -12 20 v18 q0 10 12 10 z" fill="#4c5a30"/>
+            <path d="M94 62 q12 2 12 20 v18 q0 10 -12 10 z" fill="#4c5a30"/>
+            <rect x="40" y="86" width="40" height="32" rx="9" fill="#4c5a30"/>
+            <path d="M24 58 q0 -28 36 -28 q36 0 36 28 q-36 12 -72 0 z" fill="#66774a"/>
+            <rect x="54" y="72" width="12" height="6" rx="1.5" fill="#33352c"/>
+            <rect x="54" y="98" width="12" height="6" rx="1.5" fill="#33352c"/>
+          </g>
+        </svg>
+      </div>
+      <div class="gauge-col">
+        <div class="cap-label">Rucksack capacity: <span id="cap">0</span> kg</div>
+        <div class="gauge" id="gauge"><div class="fill" id="fill"></div></div>
+        <div class="readout">
+          <div><span class="k">Weight </span><b class="wt" id="wt">0</b> <span class="k">/ <span id="cap2">0</span> kg</span></div>
+          <div><span class="k">Value </span><b id="val">0</b> <span class="k">pts</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <div class="bar">
+    <div class="hint" id="hint">Pack gear up to the capacity.</div>
+    <div class="spacer"></div>
+    <button class="action" id="reset">New Problem</button>
+    <button class="action submit" id="submit" disabled>Submit</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-head" id="mhead">
+      <h2 id="mtitle"></h2>
+      <p id="msub"></p>
+    </div>
+    <div class="modal-body">
+      <div class="scoreline"><span>Your value</span><span class="n" id="myscore"></span></div>
+      <div class="scoreline"><span>Optimal value</span><span class="n opt" id="optscore"></span></div>
+      <div class="assign-list">
+        <h3>Optimal packing</h3>
+        <div id="optlist"></div>
+      </div>
+    </div>
+    <div class="note" id="mnote"></div>
+    <div class="modal-foot">
+      <button class="action" id="close">Close</button>
+      <button class="action submit" id="retry">Try Again</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---- gear icons (cartoon, chunky outline) ----
+  const ICONS = {
+    rifle: '<svg viewBox="0 0 80 64"><g fill="#556b2f" stroke="#243018" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"><path d="M8 26 L2 25 L2 35 L8 36 Z"/><rect x="8" y="26" width="48" height="10" rx="2"/><rect x="56" y="29" width="20" height="4" rx="1"/><rect x="30" y="36" width="9" height="17" rx="2" fill="#3f5024"/><path d="M48 36 q0 7 -6 7" fill="none"/><rect x="14" y="22" width="6" height="4" rx="1" fill="#3f5024"/></g></svg>',
+    boots: '<svg viewBox="0 0 72 64"><g fill="#6b4a2b" stroke="#2b1c10" stroke-width="2.6" stroke-linejoin="round"><path d="M26 8 L40 8 L40 36 L54 41 Q62 44 62 51 L62 56 L14 56 L14 47 Q14 41 22 39 L26 37 Z"/><path d="M14 50 L62 50" stroke-width="2"/><path d="M28 16 L38 16 M28 22 L38 22 M28 28 L38 28" stroke="#c9b48a" stroke-width="2"/></g></svg>',
+    helmet: '<svg viewBox="0 0 80 64"><g stroke="#243018" stroke-width="2.6" stroke-linejoin="round"><path d="M12 42 Q12 16 40 16 Q68 16 68 42 Z" fill="#5b6a3c"/><rect x="8" y="41" width="64" height="8" rx="4" fill="#4c5a30"/><path d="M30 22 Q40 18 50 22" fill="none" stroke="#3f5024" stroke-width="2.4"/></g></svg>',
+    canteen: '<svg viewBox="0 0 64 64"><g stroke="#20301f" stroke-width="2.6" stroke-linejoin="round"><rect x="26" y="8" width="12" height="9" rx="2" fill="#33352c"/><rect x="18" y="16" width="28" height="42" rx="12" fill="#3f6b4f"/><path d="M24 26 q8 -4 16 0" fill="none" stroke="#2b5540" stroke-width="2.2"/></g></svg>',
+    medkit: '<svg viewBox="0 0 72 64"><g stroke="#2b2b2b" stroke-width="2.6" stroke-linejoin="round"><rect x="12" y="16" width="48" height="38" rx="6" fill="#e6e0d0"/><rect x="12" y="16" width="48" height="10" rx="6" fill="#cfc7b2"/><rect x="31" y="30" width="10" height="20" rx="2" fill="#c0392b" stroke="none"/><rect x="26" y="35" width="20" height="10" rx="2" fill="#c0392b" stroke="none"/></g></svg>',
+    rations: '<svg viewBox="0 0 60 64"><g stroke="#3a3320" stroke-width="2.6" stroke-linejoin="round"><rect x="16" y="12" width="30" height="42" rx="4" fill="#8a7a4a"/><path d="M16 24 L46 24" stroke-width="2.2"/><rect x="24" y="31" width="14" height="14" rx="2" fill="#5b6a3c"/></g></svg>',
+  };
+
+  // fixed identities; weights/values randomized each problem
+  const BASE = [
+    { id:"rifle",   name:"Rifle" },
+    { id:"boots",   name:"Boots" },
+    { id:"helmet",  name:"Helmet" },
+    { id:"canteen", name:"Canteen" },
+    { id:"medkit",  name:"Med Kit" },
+    { id:"rations", name:"Rations" },
+  ];
+
+  let ITEMS = [];     // [{id,name,w,v}]
+  let CAP = 0;
+  let best = null;    // {v, set, count, greedy}
+  const N = BASE.length;
+  const sel = new Array(N).fill(false);
+
+  function popcount(m){ let c=0; while(m){ c+=m&1; m>>=1; } return c; }
+
+  function bestKnap(items, C){
+    let bs=-1, bset=0, cnt=0;
+    for(let m=0; m<(1<<items.length); m++){
+      let w=0, v=0;
+      for(let i=0;i<items.length;i++) if(m&(1<<i)){ w+=items[i].w; v+=items[i].v; }
+      if(w<=C){ if(v>bs){ bs=v; bset=m; cnt=1; } else if(v===bs){ cnt++; } }
+    }
+    return { v:bs, set:bset, count:cnt };
+  }
+  function greedyRatioValue(items, C){
+    const idx=[...items.keys()].sort((a,b)=> (items[b].v/items[b].w)-(items[a].v/items[a].w));
+    let w=0, v=0;
+    for(const i of idx){ if(w+items[i].w<=C){ w+=items[i].w; v+=items[i].v; } }
+    return v;
+  }
+
+  function generateProblem(){
+    for(let t=0; t<8000; t++){
+      const cand = BASE.map(b => ({ ...b, w: 2+Math.floor(Math.random()*7), v: 2+Math.floor(Math.random()*8) })); // w 2..8, v 2..9
+      const total = cand.reduce((a,b)=>a+b.w,0);
+      const C = Math.round(total * (0.45 + Math.random()*0.2));       // 45–65% of total weight
+      const bk = bestKnap(cand, C);
+      if(bk.count !== 1) continue;                                     // unique optimum
+      const g = greedyRatioValue(cand, C);
+      if(g >= bk.v) continue;                                          // greedy must be suboptimal (non-trivial)
+      const k = popcount(bk.set);
+      if(k < 2 || k > N-1) continue;                                   // 2..N-1 items in optimum
+      ITEMS = cand; CAP = C; best = { ...bk, greedy: g }; return;
+    }
+    ITEMS = BASE.map((b,i)=>({ ...b, w:[4,3,5,2,4,3][i], v:[7,5,8,3,6,4][i] }));
+    CAP = 11; best = { ...bestKnap(ITEMS, CAP), greedy: greedyRatioValue(ITEMS, CAP) };
+  }
+
+  // build cards once
+  const grid = document.getElementById("grid");
+  BASE.forEach((b, i) => {
+    const el = document.createElement("button");
+    el.className = "item";
+    el.dataset.i = i;
+    el.innerHTML =
+      '<span class="check">&#10003;</span>' +
+      '<div class="ico">' + ICONS[b.id] + '</div>' +
+      '<div class="iname">' + b.name + '</div>' +
+      '<div class="stats"><span class="wt"></span><span class="val"></span></div>';
+    grid.appendChild(el);
+  });
+  const cards = [...grid.children];
+
+  function render(){
+    let w=0, v=0;
+    cards.forEach((el,i)=>{
+      el.querySelector(".wt").textContent = ITEMS[i].w + " kg";
+      el.querySelector(".val").textContent = ITEMS[i].v + " pts";
+      el.classList.toggle("sel", sel[i]);
+      if(sel[i]){ w+=ITEMS[i].w; v+=ITEMS[i].v; }
+    });
+    const over = w > CAP;
+    document.getElementById("cap").textContent = CAP;
+    document.getElementById("cap2").textContent = CAP;
+    document.getElementById("wt").textContent = w;
+    document.getElementById("wt").classList.toggle("over", over);
+    document.getElementById("val").textContent = v;
+    document.getElementById("gauge").classList.toggle("over", over);
+    document.getElementById("fill").style.width = Math.min(w/CAP,1)*100 + "%";
+
+    const hint = document.getElementById("hint");
+    if(over){ hint.textContent = "Over capacity by " + (w-CAP) + " kg — remove something."; hint.classList.add("warn"); }
+    else { hint.textContent = "Pack gear up to the capacity."; hint.classList.remove("warn"); }
+
+    document.getElementById("submit").disabled = over || w===0;
+  }
+
+  grid.addEventListener("click", e => {
+    const el = e.target.closest(".item");
+    if(!el) return;
+    const i = +el.dataset.i;
+    sel[i] = !sel[i];
+    render();
+  });
+
+  function newProblem(){ generateProblem(); sel.fill(false); render(); }
+  document.getElementById("reset").onclick = newProblem;
+
+  const overlay = document.getElementById("overlay");
+  function showResult(){
+    let w=0, v=0;
+    sel.forEach((s,i)=>{ if(s){ w+=ITEMS[i].w; v+=ITEMS[i].v; } });
+    const win = v === best.v;
+    const head = document.getElementById("mhead");
+    head.className = "modal-head " + (win ? "win" : "lose");
+    document.getElementById("mtitle").textContent = win ? "🎖 Optimal loadout!" : "Not optimal yet";
+    document.getElementById("msub").textContent = win
+      ? "You packed the most valuable kit that fits."
+      : "A more valuable packing fits within capacity.";
+    document.getElementById("myscore").textContent = v + " pts";
+    document.getElementById("optscore").textContent = best.v + " pts";
+    const rows = [];
+    let ow = 0;
+    ITEMS.forEach((it,i)=>{ if(best.set & (1<<i)){ ow += it.w; rows.push(
+      '<div class="assign-row"><span>'+it.name+'</span><span class="b">'+it.w+' kg &middot; '+it.v+' pts</span></div>'
+    ); } });
+    rows.push('<div class="assign-row" style="border-top:1px dashed var(--line);margin-top:6px;padding-top:8px"><span>Total</span><span class="b">'+ow+' / '+CAP+' kg &middot; '+best.v+' pts</span></div>');
+    document.getElementById("optlist").innerHTML = rows.join("");
+    document.getElementById("mnote").textContent = win
+      ? "Greedy packing (best value-per-kg first) would score only " + best.greedy + " here. 0/1 knapsack rewards weighing whole combinations, not grabbing gear one at a time."
+      : "There is a packing worth " + best.v + " pts (you got " + v + "). Greedy by value or by value-per-kg can miss it — try swapping one heavy item for two lighter ones.";
+    overlay.classList.add("open");
+  }
+
+  document.getElementById("submit").onclick = showResult;
+  document.getElementById("close").onclick = () => overlay.classList.remove("open");
+  document.getElementById("retry").onclick = () => { overlay.classList.remove("open"); sel.fill(false); render(); };
+  overlay.addEventListener("click", e => { if(e.target === overlay) overlay.classList.remove("open"); });
+
+  newProblem();
+</script>
