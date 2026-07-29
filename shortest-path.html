@@ -1,0 +1,556 @@
+<title>Shortest Path</title>
+<style>
+  :root {
+    --sky-top: #cfe8fb; --sky-bot: #eaf5fd;
+    --panel: #ffffff; --line: #cfe0ee;
+    --band-a: #eaf4fc; --band-b: #ffffff;
+    --accent: #1f5f9e; --ink: #163a5c; --muted: #5c7994;
+    --head-bg: #17416b; --head-ink: #eef6fc;
+    --ring: #3f7cae;
+    --hover: #f1f7fd;
+    --good: #2e8b57; --over: #c2603a;
+    --src: #5b6a3c; --hub: #3f6b8f; --snk: #b0553f;
+    --val-supply: #2e8b57; --val-demand: #c2603a; --val-cost: #c07a1f; --val-cap: #1f8a8a;
+    --cell-bg: #f4f9fd;
+    --law-bg: #e7f0fa;
+    --node-face: #ffffff; --node-ink: #163a5c;
+    --neon: #12c96e; --neon-ink: #06301c; --arc-idle: #a8bfd2; --warn: #d99a2b;
+  }
+  :root[data-theme="dark"] {
+    --sky-top: #0c1a28; --sky-bot: #101f30;
+    --panel: #132436; --line: #274a68;
+    --band-a: #18324b; --band-b: #132436;
+    --accent: #8fc6f5; --ink: #dcecfa; --muted: #93b3ce;
+    --head-bg: #0a1826; --head-ink: #dcecfa;
+    --ring: #5b9bd0;
+    --hover: #182f45;
+    --good: #67c896; --over: #e08a63;
+    --src: #7d8f57; --hub: #5b9bd0; --snk: #d17a63;
+    --val-supply: #67c896; --val-demand: #e08a63; --val-cost: #f0c15c; --val-cap: #5fc0c0;
+    --cell-bg: #16283c;
+    --law-bg: #16324c;
+    --node-face: #ffffff; --node-ink: #10263c;
+    --neon: #39ff9c; --neon-ink: #06301c; --arc-idle: #4d6c8b; --warn: #e8b45c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --sky-top: #0c1a28; --sky-bot: #101f30;
+      --panel: #132436; --line: #274a68;
+      --band-a: #18324b; --band-b: #132436;
+      --accent: #8fc6f5; --ink: #dcecfa; --muted: #93b3ce;
+      --head-bg: #0a1826; --head-ink: #dcecfa;
+      --ring: #5b9bd0;
+      --hover: #182f45;
+      --good: #67c896; --over: #e08a63;
+      --src: #7d8f57; --hub: #5b9bd0; --snk: #d17a63;
+      --val-supply: #67c896; --val-demand: #e08a63; --val-cost: #f0c15c; --val-cap: #5fc0c0;
+      --cell-bg: #16283c;
+      --law-bg: #16324c;
+      --node-face: #ffffff; --node-ink: #10263c;
+      --neon: #39ff9c; --neon-ink: #06301c; --arc-idle: #4d6c8b; --warn: #e8b45c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh;
+    background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bot) 55%, var(--panel) 100%);
+    display: flex; justify-content: center; align-items: flex-start; padding: 40px 16px;
+    font-family: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    color: var(--ink);
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(closest-side at 18% 20%, rgba(255,255,255,0.7), transparent 70%),
+      radial-gradient(closest-side at 80% 12%, rgba(255,255,255,0.55), transparent 70%),
+      radial-gradient(closest-side at 60% 26%, rgba(255,255,255,0.45), transparent 70%);
+  }
+  .wrap { position: relative; z-index: 1; width: 100%; max-width: 1400px; }
+  .intro { margin: 0 2px 14px; }
+  .eyebrow { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin: 0 0 4px; }
+  .intro h1 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.01em; }
+
+  .sheet {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; overflow: hidden; box-shadow: 0 12px 34px rgba(23,65,107,0.18);
+  }
+  .pack {
+    display: flex; align-items: center; gap: 26px; flex-wrap: wrap;
+    padding: 16px 22px; background: var(--head-bg); color: var(--head-ink);
+  }
+  .readout .k { opacity: 0.8; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; display: block; margin-bottom: 3px; }
+  .readout b { font-size: 22px; font-variant-numeric: tabular-nums; }
+  .readout .bal.done b { color: #8fe0b4; }
+
+  .diagram { padding: 12px 10px 4px; }
+  .dwrap { position: relative; width: 100%; }
+  .dwrap svg { width: 100%; height: auto; display: block; }
+
+  /* clickable roads */
+  .arc { cursor: pointer; }
+  .aline { transition: stroke .1s, stroke-width .1s; }
+  .arc:hover .aline { stroke: var(--accent); stroke-width: 4; }
+  .arc.on .aline { filter: drop-shadow(0 0 5px var(--neon)); }
+  .arc:focus { outline: none; }
+  .arc:focus-visible .aline { stroke: var(--ring); stroke-width: 4.5; }
+  .alabel { font-size: 11px; font-weight: 800; fill: var(--val-cost); pointer-events: none;
+            font-variant-numeric: tabular-nums; letter-spacing: 0.01em; }
+  .arc.on .alabel { fill: var(--val-cost); font-size: 11.5px; }
+
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; padding: 2px 22px 10px; font-size: 12px; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+
+  .balrow { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 16px 16px; }
+  .balchip {
+    font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 999px;
+    background: var(--band-a); border: 1px solid var(--line); color: var(--muted);
+    display: inline-flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums;
+  }
+  .balchip.ok { color: var(--good); border-color: var(--good); }
+  .balchip.bad { color: var(--over); border-color: var(--over); }
+  .balchip .tag { width: 8px; height: 8px; border-radius: 50%; }
+
+  .bar {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 14px 18px; margin-top: 14px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(23,65,107,0.12);
+  }
+  .hint { font-size: 13px; color: var(--muted); }
+  .spacer { margin-left: auto; }
+  button.action {
+    font: inherit; font-weight: 700; font-size: 14px; cursor: pointer;
+    padding: 9px 18px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--band-a); color: var(--ink); transition: filter .12s;
+  }
+  button.action:hover { filter: brightness(0.96); }
+  button.submit { background: var(--head-bg); color: var(--head-ink); border-color: var(--head-bg); }
+  button.submit:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .overlay {
+    position: fixed; inset: 0; z-index: 10; display: none;
+    align-items: center; justify-content: center; padding: 20px;
+    background: rgba(12,26,40,0.55); backdrop-filter: blur(3px);
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    width: 100%; max-width: 480px; background: var(--panel);
+    border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+    box-shadow: 0 24px 60px rgba(12,26,40,0.4); animation: pop .2s ease;
+  }
+  @keyframes pop { from { transform: translateY(12px) scale(0.97); opacity: 0; } to { transform: none; opacity: 1; } }
+  .modal-head { padding: 18px 22px; color: #fff; }
+  .modal-head.win { background: linear-gradient(135deg, #2e8b57, #1f6b45); }
+  .modal-head.lose { background: linear-gradient(135deg, #17416b, #0f2c49); }
+  .modal-head h2 { margin: 0; font-size: 20px; font-weight: 800; }
+  .modal-head p { margin: 4px 0 0; font-size: 13px; opacity: 0.9; }
+  .modal-body { padding: 18px 22px 8px; }
+  .scoreline { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; font-size: 14px; }
+  .scoreline .n { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .scoreline .n.opt { color: var(--good); }
+  .assign-list { margin: 8px 0 4px; border-top: 1px dashed var(--line); padding-top: 12px; }
+  .assign-list h3 { margin: 0 0 8px; font-size: 12px; letter-spacing: 0.04em; color: var(--muted); text-transform: uppercase; }
+  .assign-row { display: flex; justify-content: space-between; font-size: 14px; padding: 4px 0; }
+  .assign-row span:first-child { font-weight: 700; }
+  .assign-row .b { color: var(--accent); font-weight: 700; }
+  .note { font-size: 12.5px; color: var(--muted); line-height: 1.55; padding: 6px 22px 4px; }
+  .modal-foot { padding: 12px 22px 20px; display: flex; gap: 10px; }
+  .modal-foot button { flex: 1; }
+
+  /* --- dashboard: game left, formulation right --- */
+  .dash { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 0.8fr); gap: 18px; align-items: start; }
+  @media (max-width: 1000px) { .dash { grid-template-columns: 1fr; } }
+  .col-game { min-width: 0; }
+  .col-form { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 12px 34px rgba(23,65,107,0.10); overflow: hidden; }
+  .form-head { background: var(--head-bg); color: var(--head-ink); font-weight: 800; font-size: 14px; padding: 13px 18px; border-bottom: 3px solid var(--ring); }
+  .math { padding: 16px 18px 12px; }
+  .mrow { display: flex; align-items: baseline; gap: 10px; margin-bottom: 9px; }
+  .mrow.sub { margin-bottom: 7px; }
+  .mlabel { width: 74px; flex: none; text-align: right; font-size: 11.5px; font-style: italic; color: var(--muted); }
+  .mexpr { font-family: "Cambria Math", Cambria, Georgia, "Times New Roman", serif; font-size: 16px; color: var(--ink); white-space: nowrap; }
+  .mexpr sub { font-size: 10px; } .mexpr sup { font-size: 10px; }
+  .mnote { font-size: 11px; color: var(--muted); font-style: italic; }
+  .mval { margin-left: auto; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; font-size: 18px; }
+  .vardef { font-size: 11px; color: var(--muted); line-height: 1.5; border-top: 1px dashed var(--line); margin-top: 8px; padding-top: 10px; }
+  .vardef sub { font-size: 9px; }
+  .vardef.link { border-top: none; margin-top: 0; padding-top: 4px; }
+  .vardef.link a { color: var(--accent); }
+  .objbar { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); padding: 12px 18px; font-size: 13px; color: var(--muted); }
+  .objbar b { font-size: 20px; color: var(--accent); font-variant-numeric: tabular-nums; }
+
+  /* --- Scan-to-play QR: small, centered at the bottom --- */
+  .qr-card { width: 172px; margin: 22px auto 0; background: #ffffff; border: 1px solid #d6e2ee; border-radius: 12px; padding: 12px 12px 10px; text-align: center; box-shadow: 0 8px 22px rgba(23,65,107,0.16); }
+  .qr-card .qr-title { font-size: 12px; font-weight: 800; color: #17416b; margin-bottom: 8px; }
+  .qr-card .qr-img { width: 132px; height: 132px; display: block; margin: 0 auto; }
+  .qr-card .qr-url { font-size: 8px; color: #5c7994; margin-top: 8px; word-break: break-all; line-height: 1.35; font-family: ui-monospace, Menlo, monospace; }
+</style>
+
+<div class="wrap">
+
+  <div class="intro">
+    <p class="eyebrow">One traveler · one balance row per stop</p>
+    <h1>Shortest Path</h1>
+  </div>
+
+  <div class="dash">
+    <div class="col-game">
+    <div class="sheet">
+    <div class="pack">
+      <div class="readout bal" id="balbox"><span class="k">Stops balanced</span><b><span id="balcount">0</span> / <span id="baltot">0</span></b></div>
+      <div class="readout"><span class="k">Total time</span><b id="cost">0</b></div>
+      <div class="readout"><span class="k">Goal</span><b style="font-size:15px">Minimize</b></div>
+    </div>
+
+    <div class="diagram"><div class="dwrap" id="dwrap"></div></div>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--src)"></i> Start (b&nbsp;=&nbsp;+1)</span>
+      <span><i class="dot" style="background:var(--node-face);border:1px solid var(--line)"></i> Waypoint (transit only, b&nbsp;=&nbsp;0)</span>
+      <span><i class="dot" style="background:var(--snk)"></i> Destination (b&nbsp;=&nbsp;&minus;1)</span>
+      <span><i class="dot" style="background:var(--neon)"></i> On your route</span>
+    </div>
+
+    <div class="balrow" id="balrow"></div>
+  </div>
+
+  <div class="bar">
+    <div class="hint" id="hint">Click a road to put it on your route. Balance every stop (green ✓).</div>
+    <div class="spacer"></div>
+    <button class="action" id="reset">Reset</button>
+    <button class="action submit" id="submit" disabled>Submit</button>
+  </div>
+    </div>
+    <aside class="col-form">
+      <div class="form-head">Linear Program</div>
+      <div class="math">
+        <div class="mrow"><span class="mlabel">minimize</span><span class="mexpr">&#8721;<sub>(i,j)&#8712;E</sub> c<sub>ij</sub> y<sub>ij</sub></span><span class="mval" id="objval">0</span></div>
+        <div class="mrow sub"><span class="mlabel">subject to</span><span class="mexpr">&#8721;<sub>out</sub> y<sub>ij</sub> &#8722; &#8721;<sub>in</sub> y<sub>ji</sub> = b<sub>i</sub></span></div>
+        <div class="mrow sub"><span class="mlabel"></span><span class="mexpr">y<sub>ij</sub> &#8712; {0,&nbsp;1}</span><span class="mnote">use the road, or don't</span></div>
+        <div class="vardef">y<sub>ij</sub> = 1 if the road <i>i</i>&rarr;<i>j</i> is on the route; c<sub>ij</sub> = travel time; b<sub>i</sub> = +1 at the start, &minus;1 at the destination, 0 elsewhere. One balance row per stop — checked live on the map.</div>
+        <div class="vardef link">Same shape as the <a href="min-cost-network-flow.html">Network Flow</a> model, with u<sub>ij</sub>&nbsp;=&nbsp;1 and a single unit of supply/demand &mdash; that's all "shortest path" is.</div>
+      </div>
+      <div class="objbar"><span>Objective&nbsp; &#8721; c<sub>ij</sub>y<sub>ij</sub></span><b id="objbar">0</b></div>
+    </aside>
+  </div>
+  <div class="qr-card"><div class="qr-title">📱 Scan to play</div><img class="qr-img" src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27205%27%20height%3D%27205%27%20class%3D%27segno%27%3E%3Cg%20transform%3D%27scale%285%29%27%3E%3Cpath%20fill%3D%27%23fff%27%20d%3D%27M0%200h41v41h-41z%27%2F%3E%3Cpath%20class%3D%27qrline%27%20stroke%3D%27%2312233a%27%20d%3D%27M4%204.5h7m1%200h1m3%200h1m3%200h6m1%200h1m2%200h7m-33%201h1m5%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h2m2%200h1m1%200h2m2%200h1m5%200h1m-33%201h1m1%200h3m1%200h1m2%200h3m1%200h2m1%200h1m3%200h1m1%200h1m3%200h1m1%200h3m1%200h1m-33%201h1m1%200h3m1%200h1m1%200h1m1%200h1m1%200h1m4%200h3m2%200h1m3%200h1m1%200h3m1%200h1m-33%201h1m1%200h3m1%200h1m2%200h5m2%200h2m1%200h1m4%200h1m1%200h1m1%200h3m1%200h1m-33%201h1m5%200h1m2%200h4m1%200h6m2%200h1m3%200h1m5%200h1m-33%201h7m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h7m-25%201h5m2%200h4m3%200h1m-23%201h1m1%200h2m1%200h3m2%200h2m3%200h5m1%200h1m2%200h1m1%200h1m2%200h1m1%200h2m-33%201h1m1%200h1m2%200h1m2%200h1m1%200h2m1%200h1m2%200h4m1%200h3m2%200h2m1%200h2m1%200h1m-33%201h10m3%200h1m4%200h1m1%200h1m1%200h3m1%200h4m2%200h1m-33%201h3m1%200h1m2%200h3m1%200h1m3%200h1m4%200h1m2%200h1m2%200h2m1%200h1m1%200h1m-32%201h2m2%200h1m1%200h1m2%200h1m4%200h1m2%200h1m2%200h1m1%200h2m4%200h2m-30%201h1m6%200h2m1%200h3m1%200h1m4%200h1m2%200h1m1%200h1m2%200h1m2%200h2m-31%201h2m2%200h5m3%200h2m1%200h1m2%200h4m1%200h1m1%200h4m-30%201h1m2%200h1m1%200h1m2%200h2m4%200h2m5%200h1m1%200h1m1%200h2m2%200h2m-30%201h6m1%200h1m2%200h1m2%200h1m3%200h1m2%200h2m2%200h2m1%200h3m-31%201h1m9%200h2m1%200h1m1%200h4m3%200h5m1%200h2m2%200h1m-30%201h2m1%200h1m1%200h1m1%200h1m2%200h1m2%200h1m5%200h5m1%200h2m-32%201h2m1%200h1m1%200h1m1%200h2m2%200h1m3%200h1m1%200h1m2%200h1m1%200h1m1%200h2m2%200h1m2%200h2m-33%201h3m3%200h1m1%200h2m1%200h2m3%200h4m1%200h1m1%200h1m5%200h4m-33%201h2m9%200h1m1%200h3m3%200h2m1%200h2m1%200h2m2%200h2m1%200h1m-31%201h1m1%200h1m1%200h1m2%200h2m1%200h1m1%200h1m2%200h2m1%200h2m1%200h1m3%200h1m2%200h3m-32%201h1m2%200h2m3%200h6m4%200h1m5%200h1m1%200h1m1%200h1m1%200h2m-33%201h1m1%200h1m3%200h2m1%200h2m1%200h2m3%200h1m2%200h1m2%200h6m3%200h1m-25%201h2m2%200h6m1%200h2m1%200h3m3%200h2m-30%201h7m1%200h4m1%200h1m4%200h3m2%200h2m1%200h1m1%200h1m-29%201h1m5%200h1m1%200h1m2%200h6m1%200h4m1%200h2m3%200h5m-33%201h1m1%200h3m1%200h1m5%200h2m4%200h1m2%200h1m1%200h6m1%200h2m-32%201h1m1%200h3m1%200h1m1%200h2m1%200h3m1%200h1m1%200h1m2%200h1m1%200h2m3%200h1m4%200h1m-33%201h1m1%200h3m1%200h1m1%200h4m1%200h1m1%200h2m1%200h1m1%200h2m2%200h1m1%200h2m1%200h2m-31%201h1m5%200h1m3%200h3m1%200h1m1%200h2m5%200h2m1%200h3m3%200h1m-33%201h7m1%200h1m3%200h1m2%200h1m1%200h2m1%200h4m2%200h1m1%200h1m1%200h1%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E" alt="QR code to open the game on a phone"/><div class="qr-url">hankpark0706.github.io/ip-games/shortest-path.html</div></div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-head" id="mhead">
+      <h2 id="mtitle"></h2>
+      <p id="msub"></p>
+    </div>
+    <div class="modal-body">
+      <div class="scoreline"><span>Your total time</span><span class="n" id="myscore"></span></div>
+      <div class="scoreline"><span>Optimal (shortest) time</span><span class="n opt" id="optscore"></span></div>
+      <div class="assign-list">
+        <h3>Optimal route</h3>
+        <div id="optlist"></div>
+      </div>
+    </div>
+    <div class="note" id="mnote"></div>
+    <div class="modal-foot">
+      <button class="action" id="close">Close</button>
+      <button class="action submit" id="retry">Try Again</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 17 stops in 6 layers: Start | A B C D | E F G H | I J K L | M N O | Destination
+  const NODE = [
+    { id:"Start",       type:"src", icon:"depot",   x:54,  y:262 },
+    { id:"A", type:"hub", x:196, y:78  },
+    { id:"B", type:"hub", x:196, y:196 },
+    { id:"C", type:"hub", x:196, y:326 },
+    { id:"D", type:"hub", x:196, y:448 },
+    { id:"E", type:"hub", x:352, y:58  },
+    { id:"F", type:"hub", x:352, y:182 },
+    { id:"G", type:"hub", x:352, y:312 },
+    { id:"H", type:"hub", x:352, y:444 },
+    { id:"I", type:"hub", x:520, y:96  },
+    { id:"J", type:"hub", x:520, y:228 },
+    { id:"K", type:"hub", x:520, y:356 },
+    { id:"L", type:"hub", x:520, y:474 },
+    { id:"M", type:"hub", x:690, y:140 },
+    { id:"N", type:"hub", x:690, y:282 },
+    { id:"O", type:"hub", x:690, y:424 },
+    { id:"Destination", type:"snk", icon:"outpost", x:838, y:268 },
+  ];
+  const NAME = {}; NODE.forEach((n,i)=> NAME[n.id]=i);
+  const P = (a,b)=>({ f:NAME[a], t:NAME[b] });
+  const ARC = [
+    P("Start","A"), P("Start","B"), P("Start","C"), P("Start","D"),
+    P("A","E"), P("A","F"),
+    P("B","E"), P("B","F"), P("B","G"),
+    P("C","F"), P("C","G"), P("C","H"),
+    P("D","G"), P("D","H"),
+    P("E","I"), P("E","J"),
+    P("F","I"), P("F","J"), P("F","K"),
+    P("G","J"), P("G","K"), P("G","L"),
+    P("H","K"), P("H","L"),
+    P("I","M"), P("J","M"), P("J","N"),
+    P("K","N"), P("K","O"), P("L","N"), P("L","O"),
+    P("M","Destination"), P("N","Destination"), P("O","Destination"),
+  ];
+  const M = NODE.length, E = ARC.length;
+  const VBW = 892, VBH = 528, RAD = 22;
+
+  // ---- FIXED problem (same for every student) ----
+  // tuned so the cheapest first road (Start->A, 4 min) is a trap: greedy = 42, optimal = 29
+  const FIX_B = NODE.map(n=> n.type==="src" ? 1 : n.type==="snk" ? -1 : 0);
+  const FIX_COST = [
+    4, 12, 8, 12,          // Start -> A B C D
+    11, 11,                // A -> E F
+    6, 4, 4,               // B -> E F G
+    7, 6, 3,               // C -> F G H
+    12, 3,                 // D -> G H
+    3, 7,                  // E -> I J
+    10, 8, 8,              // F -> I J K
+    4, 8, 12,              // G -> J K L
+    6, 12,                 // H -> K L
+    12, 11, 12,            // I->M, J->M, J->N
+    4, 8, 5, 12,           // K->N, K->O, L->N, L->O
+    12, 8, 12,             // M N O -> Destination
+  ];
+  const FIX_CAP = new Array(E).fill(1);   // one lane each -- it's a path, not a flow
+
+  let b = FIX_B.slice(), cost = FIX_COST.slice(), cap = FIX_CAP.slice();
+  let flow = new Array(E).fill(0);
+  let best = null;
+
+  // same successive-shortest-augmenting-path min-cost-flow solver as the
+  // Network Flow game -- shortest path is just this with unit b and unit caps.
+  function mcnf(m, bb, arcs){
+    const S=m, T=m+1, V=m+2, g=[], head=Array.from({length:V},()=>[]);
+    const add=(u,v,cp,cs)=>{ head[u].push(g.length); g.push({to:v,cap:cp,cost:cs}); head[v].push(g.length); g.push({to:u,cap:0,cost:-cs}); };
+    const ai=[];
+    arcs.forEach(a=>{ ai.push(g.length); add(a.u,a.v,a.cap,a.cost); });
+    let tot=0;
+    for(let i=0;i<m;i++){ if(bb[i]>0){ add(S,i,bb[i],0); tot+=bb[i]; } else if(bb[i]<0){ add(i,T,-bb[i],0); } }
+    let flowv=0, costv=0;
+    while(true){
+      const dist=Array(V).fill(Infinity), inq=Array(V).fill(false), pe=Array(V).fill(-1);
+      dist[S]=0; const q=[S];
+      while(q.length){ const u=q.shift(); inq[u]=false;
+        for(const ei of head[u]){ const e=g[ei];
+          if(e.cap>0 && dist[u]+e.cost<dist[e.to]){ dist[e.to]=dist[u]+e.cost; pe[e.to]=ei; if(!inq[e.to]){ inq[e.to]=true; q.push(e.to);} } } }
+      if(dist[T]===Infinity) break;
+      let f=Infinity; for(let v=T; v!==S; ){ const ei=pe[v]; f=Math.min(f,g[ei].cap); v=g[ei^1].to; }
+      for(let v=T; v!==S; ){ const ei=pe[v]; g[ei].cap-=f; g[ei^1].cap+=f; v=g[ei^1].to; }
+      flowv+=f; costv+=f*dist[T];
+    }
+    const fl = ai.map((idx,k)=> arcs[k].cap - g[idx].cap);
+    return { cost: (flowv===tot ? costv : null), flow: fl };
+  }
+  // greedy walker: always take the cheapest road out of the current stop --
+  // the classic trap (cheapest FIRST road isn't always the shortest ROUTE).
+  function greedyPath(){
+    let cur = 0, total = 0, path = [0], visited = new Set([0]), guard = 0;
+    while(cur !== M-1 && guard++ < M){
+      const opts = ARC.map((a,k)=>({...a,k})).filter(a=>a.f===cur && !visited.has(a.t));
+      if(!opts.length) return null;
+      opts.sort((a,b)=>cost[a.k]-cost[b.k]);
+      const pick = opts[0];
+      total += cost[pick.k]; cur = pick.t; visited.add(cur); path.push(cur);
+    }
+    return cur===M-1 ? { total, path } : null;
+  }
+  function setupFixed(){
+    const arcs=ARC.map((a,k)=>({u:a.f, v:a.t, cap:cap[k], cost:cost[k]}));
+    const opt=mcnf(M, b, arcs);
+    const g = greedyPath();
+    best={ ...opt, greedy: g ? g.total : null, greedyPath: g ? g.path.map(i=>NODE[i].id).join(" → ") : "" };
+  }
+
+  const dwrap = document.getElementById("dwrap");
+  const lerp = (a,c,t)=> a+(c-a)*t;
+
+  function iconGlyph(kind, x, y){
+    if(!kind) return "";
+    const g = 'transform="translate('+x+','+y+')"';
+    if(kind==="depot"){
+      return '<g '+g+' stroke="#fff" stroke-width="2.1" fill="none" stroke-linejoin="round">'
+        + '<rect x="-10" y="-7" width="20" height="14" rx="1.5"/>'
+        + '<path d="M-10 -7 L10 7 M10 -7 L-10 7" stroke-width="1.4"/></g>';
+    }
+    // outpost: tent + flag
+    return '<g '+g+' stroke="#fff" stroke-width="2" fill="none" stroke-linejoin="round" stroke-linecap="round">'
+      + '<path d="M-10 7 L0 -4 L10 7 Z"/>'
+      + '<path d="M0 -4 L0 -12"/>'
+      + '<path d="M0 -12 L7 -10 L0 -8 Z" fill="#fff"/></g>';
+  }
+
+  function build(){
+    let s = '<svg viewBox="0 0 '+VBW+' '+VBH+'" xmlns="http://www.w3.org/2000/svg">';
+    s += '<defs>'
+       + '<marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--arc-idle)"/></marker>'
+       + '<marker id="arwN" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--neon)"/></marker>'
+       + '</defs>';
+
+    // roads: whole <g> is the click target (visible line + rotated time label + fat invisible hit line)
+    // labels are slid along / flipped across their road so crossing roads don't stack their times
+    const placed = [];
+    const TS = [0.5, 0.42, 0.58, 0.34, 0.66, 0.27, 0.73, 0.21, 0.79];
+    const OFFS = [10, 17];
+    ARC.forEach((a,k)=>{
+      const f=NODE[a.f], t=NODE[a.t];
+      const dx=t.x-f.x, dy=t.y-f.y, len=Math.hypot(dx,dy), ux=dx/len, uy=dy/len;
+      const x1=f.x+ux*RAD, y1=f.y+uy*RAD, x2=t.x-ux*RAD, y2=t.y-uy*RAD;
+      let ang = Math.atan2(dy,dx)*180/Math.PI;
+      if(ang>90) ang-=180; else if(ang<-90) ang+=180;   // keep text upright
+
+      // pick the spot on this road that sits farthest from labels already placed
+      let pick=null, pickScore=-1;
+      for(const tt of TS){
+        for(const off of OFFS){
+          for(const side of [1,-1]){
+            const px = lerp(x1,x2,tt) - uy*off*side, py = lerp(y1,y2,tt) + ux*off*side;
+            let sc = Infinity;
+            placed.forEach(p=> sc = Math.min(sc, Math.hypot(p.x-px, p.y-py)));
+            NODE.forEach(n=> sc = Math.min(sc, Math.hypot(n.x-px, n.y-py) - 8));
+            if(sc>pickScore){ pickScore=sc; pick={x:px, y:py}; }
+          }
+        }
+        if(pickScore>=34) break;   // good enough -- keep the label near the middle
+      }
+      placed.push(pick);
+      const lx = pick.x.toFixed(1), ly = pick.y.toFixed(1);
+
+      s += '<g class="arc" id="ag'+k+'" data-k="'+k+'" tabindex="0" role="button" aria-label="road '+f.id+' to '+t.id+', '+cost[k]+' minutes">'
+         + '<line class="aline" id="al'+k+'" x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="var(--arc-idle)" stroke-width="2.4" marker-end="url(#arw)"/>'
+         + '<text class="alabel" x="'+lx+'" y="'+ly+'" text-anchor="middle" dominant-baseline="middle"'
+         + ' transform="rotate('+ang.toFixed(1)+' '+lx+' '+ly+')"'
+         + ' stroke="var(--panel)" stroke-width="2.8" paint-order="stroke">'+cost[k]+' min</text>'
+         + '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="transparent" stroke-width="17" pointer-events="stroke"/>'
+         + '</g>';
+    });
+
+    // stops (drawn last so they sit on top; clicks pass through to the roads)
+    NODE.forEach((n,i)=>{
+      const isEnd = n.type!=="hub";
+      const fill = n.type==="src"?"var(--src)":n.type==="snk"?"var(--snk)":"var(--node-face)";
+      s += '<g pointer-events="none">';
+      s += '<circle id="nr'+i+'" cx="'+n.x+'" cy="'+n.y+'" r="'+RAD+'" fill="'+fill+'" stroke="var(--line)" stroke-width="2.5"/>';
+      if(n.icon){
+        s += iconGlyph(n.icon, n.x, n.y);
+      } else {
+        s += '<text id="nt'+i+'" x="'+n.x+'" y="'+(n.y+5)+'" text-anchor="middle" font-size="14" font-weight="800" fill="var(--node-ink)">'+n.id+'</text>';
+      }
+      s += '</g>';
+      if(isEnd){
+        s += '<g pointer-events="none">';
+        s += '<text x="'+n.x+'" y="'+(n.y+RAD+16)+'" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--ink)">'+n.id+'</text>';
+        const word = n.type==="src" ? "b = +1" : "b = −1";
+        const vcol = n.type==="src" ? "var(--val-supply)" : "var(--val-demand)";
+        s += '<text x="'+n.x+'" y="'+(n.y+RAD+31)+'" text-anchor="middle" font-size="11" font-weight="800" fill="'+vcol+'">'+word+'</text>';
+        s += '</g>';
+      }
+    });
+    s += '</svg>';
+    dwrap.innerHTML = s;
+
+    document.getElementById("baltot").textContent = M;
+    document.getElementById("balrow").innerHTML = NODE.map((n,i)=>{
+      const col = n.type==="src"?"var(--src)":n.type==="snk"?"var(--snk)":"var(--node-face)";
+      const brd = n.type==="hub" ? ";border:1px solid var(--line)" : "";
+      return '<span class="balchip" id="bc'+i+'"><i class="tag" style="background:'+col+brd+'"></i>'+n.id+' <span id="bcv'+i+'"></span></span>';
+    }).join("");
+  }
+
+  function render(){
+    const net = new Array(M).fill(0), touched = new Array(M).fill(false);
+    let totCost=0;
+    ARC.forEach((a,k)=>{
+      net[a.f]+=flow[k]; net[a.t]-=flow[k]; totCost += flow[k]*cost[k];
+      if(flow[k]>0){ touched[a.f]=true; touched[a.t]=true; }
+    });
+
+    ARC.forEach((a,k)=>{
+      const on = flow[k]>0;
+      document.getElementById("ag"+k).classList.toggle("on", on);
+      const line=document.getElementById("al"+k);
+      line.setAttribute("stroke", on?"var(--neon)":"var(--arc-idle)");
+      line.setAttribute("stroke-width", on? "4.5" : "2.4");
+      line.setAttribute("marker-end", on?"url(#arwN)":"url(#arw)");
+    });
+
+    let balanced=0;
+    NODE.forEach((n,i)=>{
+      const ok = net[i]===b[i];
+      if(ok) balanced++;
+      const chip=document.getElementById("bc"+i);
+      chip.classList.toggle("ok", ok);
+      chip.classList.toggle("bad", !ok && touched[i]);
+      const want = b[i]>0?("+"+b[i]):(""+b[i]);
+      document.getElementById("bcv"+i).textContent = net[i]+" / "+want+(ok?" ✓":"");
+
+      // white unless the stop is on the route; neon when it is, amber ring if it doesn't balance
+      const ring=document.getElementById("nr"+i);
+      const onRoute = touched[i];
+      if(n.type==="hub"){
+        ring.setAttribute("fill", onRoute ? "var(--neon)" : "var(--node-face)");
+        const lbl=document.getElementById("nt"+i);
+        if(lbl) lbl.setAttribute("fill","var(--node-ink)");
+      }
+      ring.setAttribute("stroke", !onRoute ? "var(--line)" : (ok ? "var(--neon)" : "var(--warn)"));
+      ring.setAttribute("stroke-width", onRoute ? "4" : "2.5");
+      ring.style.filter = onRoute ? "drop-shadow(0 0 6px var(--neon))" : "none";
+    });
+
+    document.getElementById("balcount").textContent = balanced;
+    document.getElementById("cost").textContent = totCost;
+    document.getElementById("objval").textContent = totCost;
+    document.getElementById("objbar").textContent = totCost;
+    const complete = balanced===M;
+    document.getElementById("balbox").classList.toggle("done", complete);
+
+    document.getElementById("hint").textContent = complete
+      ? "Every stop balances — ready to submit."
+      : "Click a road to put it on your route. Balance every stop so outflow minus inflow equals b (green ✓).";
+    document.getElementById("submit").disabled = !complete;
+  }
+
+  function toggleArc(k){ flow[k] = flow[k]>0 ? 0 : 1; render(); }
+  dwrap.addEventListener("click", e=>{
+    const g=e.target.closest(".arc"); if(!g) return;
+    toggleArc(+g.dataset.k);
+  });
+  dwrap.addEventListener("keydown", e=>{
+    if(e.key!=="Enter" && e.key!==" ") return;
+    const g=e.target.closest(".arc"); if(!g) return;
+    e.preventDefault(); toggleArc(+g.dataset.k);
+  });
+
+  function resetFlows(){ flow=new Array(E).fill(0); render(); }
+  document.getElementById("reset").onclick = resetFlows;
+
+  const overlay=document.getElementById("overlay");
+  function showResult(){
+    let my=0; ARC.forEach((a,k)=> my+=flow[k]*cost[k]);
+    const win = my===best.cost;
+    const head=document.getElementById("mhead");
+    head.className="modal-head "+(win?"win":"lose");
+    document.getElementById("mtitle").textContent = win?"🎖 Shortest route!":"Not the shortest yet";
+    document.getElementById("msub").textContent = win?"Start to Destination in the least possible time.":"A faster feasible route exists.";
+    document.getElementById("myscore").textContent = my;
+    document.getElementById("optscore").textContent = best.cost;
+    const rows=[];
+    ARC.forEach((a,k)=>{ if(best.flow[k]>0) rows.push('<div class="assign-row"><span>'+NODE[a.f].id+' &rarr; '+NODE[a.t].id+'</span><span class="b">'+cost[k]+' min</span></div>'); });
+    rows.push('<div class="assign-row" style="border-top:1px dashed var(--line);margin-top:6px;padding-top:8px"><span>Total time</span><span class="b">'+best.cost+'</span></div>');
+    document.getElementById("optlist").innerHTML = rows.join("");
+    document.getElementById("mnote").textContent = win
+      ? "Taking the cheapest-looking road at every step ("+best.greedyPath+") would cost "+best.greedy+". The shortest route costs "+best.cost+", because the cheapest FIRST road isn't always part of the cheapest ROUTE — that's exactly why route-finders solve this as a linear program instead of just picking the next-best road."
+      : "A feasible route takes only "+best.cost+" minutes (yours: "+my+"). With "+E+" roads there are far too many routes to eyeball — follow the balance rows, not the cheapest next road.";
+    overlay.classList.add("open");
+  }
+  document.getElementById("submit").onclick = showResult;
+  document.getElementById("close").onclick = ()=> overlay.classList.remove("open");
+  document.getElementById("retry").onclick = ()=>{ overlay.classList.remove("open"); flow=new Array(E).fill(0); render(); };
+  overlay.addEventListener("click", e=>{ if(e.target===overlay) overlay.classList.remove("open"); });
+
+  setupFixed();
+  build();
+  render();
+</script>

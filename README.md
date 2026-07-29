@@ -9,5 +9,6 @@ for the "scan to play" landing page with a QR code for each game.
 | [knapsack.html](knapsack.html) | 0/1 knapsack |
 | [transportation.html](transportation.html) | Transportation (Hitchcock) |
 | [min-cost-network-flow.html](min-cost-network-flow.html) | Minimum cost network flow |
+| [shortest-path.html](shortest-path.html) | Shortest path (network flow with unit supply/demand) |
 
 Hosted via GitHub Pages at https://hankpark0706.github.io/ip-games/
