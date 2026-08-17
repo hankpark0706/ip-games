@@ -207,7 +207,7 @@
     <h1>Knapsack Problem</h1>
     <p>Your rucksack has a <b>weight capacity</b>. Each piece of gear has a weight (kg) and a mission value (pts).
     Choose which items to pack — <b>without exceeding the capacity</b> — to <b>maximize total value</b>.
-    Click gear to pack or unpack, then Submit. Hit <b>New Problem</b> for a fresh, randomly generated loadout.</p>
+    Click gear to pack or unpack, then Submit. Everyone works the same loadout — hit <b>Reset</b> to clear your picks and start over.</p>
   </div>
 
   <div class="dash">
@@ -245,7 +245,7 @@
   <div class="bar">
     <div class="hint" id="hint">Pack gear up to the capacity.</div>
     <div class="spacer"></div>
-    <button class="action" id="reset">New Problem</button>
+    <button class="action" id="reset">Reset</button>
     <button class="action submit" id="submit" disabled>Submit</button>
   </div>
     </div>
@@ -300,18 +300,24 @@
     rations: '<svg viewBox="0 0 60 64"><g stroke="#3a3320" stroke-width="2.6" stroke-linejoin="round"><rect x="16" y="12" width="30" height="42" rx="4" fill="#8a7a4a"/><path d="M16 24 L46 24" stroke-width="2.2"/><rect x="24" y="31" width="14" height="14" rx="2" fill="#5b6a3c"/></g></svg>',
   };
 
-  // fixed identities; weights/values randomized each problem
+  // Fixed loadout -- every student solves the SAME instance, so results are
+  // comparable across the room. Hand-picked so the 0/1 optimum is unique,
+  // greedy-by-ratio is suboptimal, AND the capacity constraint is slack at
+  // the optimum (rifle+helmet+rations = 15 kg used out of 21 kg available --
+  // no other combination of the remaining 6 kg of headroom beats it). That
+  // last property is the point: in a continuous LP you'd always use up every
+  // last kg, but 0/1 integrality can leave capacity on the table.
   const BASE = [
-    { id:"rifle",   name:"Rifle" },
-    { id:"boots",   name:"Boots" },
-    { id:"helmet",  name:"Helmet" },
-    { id:"canteen", name:"Canteen" },
-    { id:"medkit",  name:"Med Kit" },
-    { id:"rations", name:"Rations" },
+    { id:"rifle",   name:"Rifle",   w:5, v:9 },
+    { id:"boots",   name:"Boots",   w:7, v:8 },
+    { id:"helmet",  name:"Helmet",  w:8, v:9 },
+    { id:"canteen", name:"Canteen", w:8, v:8 },
+    { id:"medkit",  name:"Med Kit", w:8, v:3 },
+    { id:"rations", name:"Rations", w:2, v:9 },
   ];
+  const CAP = 21;
 
   let ITEMS = [];     // [{id,name,w,v}]
-  let CAP = 0;
   let best = null;    // {v, set, count, greedy}
   const N = BASE.length;
   const sel = new Array(N).fill(false);
@@ -334,21 +340,9 @@
     return v;
   }
 
-  function generateProblem(){
-    for(let t=0; t<8000; t++){
-      const cand = BASE.map(b => ({ ...b, w: 2+Math.floor(Math.random()*7), v: 2+Math.floor(Math.random()*8) })); // w 2..8, v 2..9
-      const total = cand.reduce((a,b)=>a+b.w,0);
-      const C = Math.round(total * (0.45 + Math.random()*0.2));       // 45–65% of total weight
-      const bk = bestKnap(cand, C);
-      if(bk.count !== 1) continue;                                     // unique optimum
-      const g = greedyRatioValue(cand, C);
-      if(g >= bk.v) continue;                                          // greedy must be suboptimal (non-trivial)
-      const k = popcount(bk.set);
-      if(k < 2 || k > N-1) continue;                                   // 2..N-1 items in optimum
-      ITEMS = cand; CAP = C; best = { ...bk, greedy: g }; return;
-    }
-    ITEMS = BASE.map((b,i)=>({ ...b, w:[4,3,5,2,4,3][i], v:[7,5,8,3,6,4][i] }));
-    CAP = 11; best = { ...bestKnap(ITEMS, CAP), greedy: greedyRatioValue(ITEMS, CAP) };
+  function loadProblem(){
+    ITEMS = BASE.map(b => ({ ...b }));
+    best = { ...bestKnap(ITEMS, CAP), greedy: greedyRatioValue(ITEMS, CAP) };
   }
 
   // build cards once
@@ -399,8 +393,8 @@
     render();
   });
 
-  function newProblem(){ generateProblem(); sel.fill(false); render(); }
-  document.getElementById("reset").onclick = newProblem;
+  function resetPicks(){ sel.fill(false); render(); }
+  document.getElementById("reset").onclick = resetPicks;
 
   const overlay = document.getElementById("overlay");
   function showResult(){
@@ -444,5 +438,6 @@
     chip.classList.toggle("ok", w>0 && w<=CAP);
   }
 
-  newProblem();
+  loadProblem();
+  render();
 </script>
