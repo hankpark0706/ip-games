@@ -1,0 +1,587 @@
+<title>Markowitz Portfolio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --sky-top: #cfe8fb; --sky-bot: #eaf5fd;
+    --panel: #ffffff; --line: #cfe0ee;
+    --band-a: #eaf4fc; --band-b: #ffffff;
+    --accent: #1f5f9e; --ink: #163a5c; --muted: #5c7994;
+    --head-bg: #17416b; --head-ink: #eef6fc;
+    --ring: #3f7cae;
+    --hover: #f1f7fd;
+    --good: #2e8b57; --over: #c2603a;
+    --grid: #d7e5f0;
+  }
+  :root[data-theme="dark"] {
+    --sky-top: #0c1a28; --sky-bot: #101f30;
+    --panel: #132436; --line: #274a68;
+    --band-a: #18324b; --band-b: #132436;
+    --accent: #8fc6f5; --ink: #dcecfa; --muted: #93b3ce;
+    --head-bg: #0a1826; --head-ink: #dcecfa;
+    --ring: #5b9bd0;
+    --hover: #182f45;
+    --good: #67c896; --over: #e08a63;
+    --grid: #21405c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --sky-top: #0c1a28; --sky-bot: #101f30;
+      --panel: #132436; --line: #274a68;
+      --band-a: #18324b; --band-b: #132436;
+      --accent: #8fc6f5; --ink: #dcecfa; --muted: #93b3ce;
+      --head-bg: #0a1826; --head-ink: #dcecfa;
+      --ring: #5b9bd0;
+      --hover: #182f45;
+      --good: #67c896; --over: #e08a63;
+      --grid: #21405c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh;
+    background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bot) 55%, var(--panel) 100%);
+    display: flex; justify-content: center; align-items: flex-start; padding: 44px 16px;
+    font-family: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    color: var(--ink);
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(closest-side at 18% 20%, rgba(255,255,255,0.7), transparent 70%),
+      radial-gradient(closest-side at 80% 12%, rgba(255,255,255,0.55), transparent 70%),
+      radial-gradient(closest-side at 60% 26%, rgba(255,255,255,0.45), transparent 70%);
+  }
+  .wrap { position: relative; z-index: 1; width: 100%; max-width: 1140px; }
+  .intro { margin: 0 2px 14px; }
+  .eyebrow { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin: 0 0 4px; }
+  .intro h1 { margin: 0 0 6px; font-size: 24px; font-weight: 800; letter-spacing: -0.01em; }
+  .intro p { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--muted); }
+
+  .sheet {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; overflow: hidden; box-shadow: 0 12px 34px rgba(23,65,107,0.18);
+  }
+
+  /* fund panel (header band) */
+  .fund {
+    display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+    padding: 18px 22px; background: var(--head-bg); color: var(--head-ink);
+    border-bottom: 3px solid var(--ring);
+  }
+  .cash { width: 86px; flex: none; }
+  .cash svg { width: 100%; height: auto; display: block; filter: drop-shadow(0 3px 5px rgba(0,0,0,0.28)); }
+  .gauge-col { flex: 1; min-width: 240px; }
+  .cap-label { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85; margin-bottom: 6px; }
+  .gauge {
+    position: relative; height: 14px; border-radius: 999px; background: rgba(255,255,255,0.16);
+    overflow: hidden; border: 1px solid rgba(255,255,255,0.22);
+  }
+  .gauge + .cap-label { margin-top: 12px; }
+  .gauge .fill {
+    height: 100%; width: 0; border-radius: 999px;
+    background: linear-gradient(90deg, #5aa9e0, #8fd0ff);
+    transition: width .15s ease, background .15s ease;
+  }
+  .gauge.over .fill { background: linear-gradient(90deg, #d9714a, #f0a07a); }
+  .gauge.met .fill { background: linear-gradient(90deg, #3fa06c, #7fd0a2); }
+  .gauge .tick {
+    position: absolute; top: -2px; bottom: -2px; width: 0;
+    border-left: 2px dashed rgba(255,255,255,0.85);
+  }
+  .readout { display: flex; gap: 22px; margin-top: 12px; font-size: 13.5px; flex-wrap: wrap; }
+  .readout .k { opacity: 0.8; }
+  .readout b { font-size: 17px; font-variant-numeric: tabular-nums; }
+  .cap-label .over, .readout .over { color: #ffd7c6; font-weight: 800; }
+  .cap-label .met, .readout .met { color: #b9f0cf; font-weight: 800; }
+
+  /* draggable allocation chart */
+  .chartbox { padding: 12px 18px 4px; }
+  .chartbox svg { width: 100%; height: auto; display: block; touch-action: none; }
+  .chartbox .colhit { cursor: ns-resize; }
+  .afoot {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;
+    padding: 2px 18px 16px; text-align: center;
+  }
+  @media (max-width: 480px) {
+    .fund { gap: 14px; padding: 16px 14px; }
+    .cash { width: 60px; }
+    .gauge-col { min-width: 0; }
+    .afoot { padding: 2px 10px 14px; gap: 4px; }
+    .astep { gap: 4px; }
+    .astep button { width: 26px; height: 26px; font-size: 14px; }
+    .astep .lots { min-width: 42px; font-size: 12px; }
+    .afoot .aname { font-size: 13px; }
+    .afoot .astats { font-size: 10.5px; }
+  }
+  .afoot .aname { font-size: 14.5px; font-weight: 800; }
+  .afoot .aname .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
+  .afoot .astats { font-size: 12px; color: var(--muted); font-weight: 700; margin: 3px 0 7px; font-variant-numeric: tabular-nums; }
+  .astep { display: inline-flex; align-items: center; gap: 8px; }
+  .astep button {
+    font: inherit; font-weight: 800; font-size: 16px; line-height: 1; cursor: pointer;
+    width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--band-a); color: var(--ink);
+  }
+  .astep button:hover:not(:disabled) { filter: brightness(0.95); }
+  .astep button:disabled { opacity: 0.3; cursor: not-allowed; }
+  .astep button:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; }
+  .astep .lots { min-width: 56px; font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .astep .lots small { display: block; font-size: 10.5px; color: var(--muted); font-weight: 700; }
+
+  .bar {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 14px 18px; margin-top: 14px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(23,65,107,0.12);
+  }
+  .hint { font-size: 13px; color: var(--muted); }
+  .hint.warn { color: var(--over); font-weight: 700; }
+  .hint.ok { color: var(--good); font-weight: 700; }
+  .spacer { margin-left: auto; }
+  button.action {
+    font: inherit; font-weight: 700; font-size: 14px; cursor: pointer;
+    padding: 9px 18px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--band-a); color: var(--ink); transition: filter .12s;
+  }
+  button.action:hover { filter: brightness(0.96); }
+  button.submit { background: var(--head-bg); color: var(--head-ink); border-color: var(--head-bg); }
+  button.submit:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  /* modal */
+  .overlay {
+    position: fixed; inset: 0; z-index: 10; display: none;
+    align-items: center; justify-content: center; padding: 20px;
+    background: rgba(12,26,40,0.55); backdrop-filter: blur(3px);
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    width: 100%; max-width: 460px; background: var(--panel);
+    border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+    box-shadow: 0 24px 60px rgba(12,26,40,0.4); animation: pop .2s ease;
+  }
+  @keyframes pop { from { transform: translateY(12px) scale(0.97); opacity: 0; } to { transform: none; opacity: 1; } }
+  .modal-head { padding: 18px 22px; color: #fff; }
+  .modal-head.win { background: linear-gradient(135deg, #2e8b57, #1f6b45); }
+  .modal-head.lose { background: linear-gradient(135deg, #17416b, #0f2c49); }
+  .modal-head h2 { margin: 0; font-size: 20px; font-weight: 800; }
+  .modal-head p { margin: 4px 0 0; font-size: 13px; opacity: 0.9; }
+  .modal-body { padding: 18px 22px 8px; }
+  .scoreline { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; font-size: 14px; }
+  .scoreline .n { font-size: 21px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .scoreline .n.opt { color: var(--good); }
+  .assign-list { margin: 8px 0 4px; border-top: 1px dashed var(--line); padding-top: 12px; }
+  .assign-list h3 { margin: 0 0 8px; font-size: 12px; letter-spacing: 0.04em; color: var(--muted); text-transform: uppercase; }
+  .assign-row { display: flex; justify-content: space-between; font-size: 14px; padding: 4px 0; }
+  .assign-row span:first-child { font-weight: 700; }
+  .assign-row .b { color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .note { font-size: 12.5px; color: var(--muted); line-height: 1.55; padding: 6px 22px 4px; }
+  .modal-foot { padding: 12px 22px 20px; display: flex; gap: 10px; }
+  .modal-foot button { flex: 1; }
+
+  /* --- dashboard: game left, formulation right --- */
+  .dash { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.92fr); gap: 18px; align-items: start; }
+  @media (max-width: 880px) { .dash { grid-template-columns: 1fr; } }
+  .col-game { min-width: 0; }
+  .col-form { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 12px 34px rgba(23,65,107,0.10); overflow: hidden; }
+  .form-head { background: var(--head-bg); color: var(--head-ink); font-weight: 800; font-size: 14px; padding: 13px 18px; border-bottom: 3px solid var(--ring); }
+  .math { padding: 16px 18px 12px; }
+  .mrow { display: flex; align-items: baseline; gap: 10px; margin-bottom: 9px; }
+  .mrow.sub { margin-bottom: 7px; }
+  .mlabel { width: 74px; flex: none; text-align: right; font-size: 11.5px; font-style: italic; color: var(--muted); }
+  .mexpr { font-family: "Cambria Math", Cambria, Georgia, "Times New Roman", serif; font-size: 17px; color: var(--ink); white-space: nowrap; }
+  .mexpr sub { font-size: 11px; } .mexpr sup { font-size: 10px; }
+  .mnote { font-size: 11px; color: var(--muted); font-style: italic; }
+  .mval { margin-left: auto; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; font-size: 16px; }
+  .vardef { font-size: 11px; color: var(--muted); line-height: 1.5; border-top: 1px dashed var(--line); margin-top: 8px; padding-top: 10px; }
+  .vardef sub { font-size: 9px; }
+  /* data table: mu and Sigma, matching the course note */
+  .datablk { border-top: 1px dashed var(--line); padding: 13px 18px; }
+  .datablk .cc-title { margin-bottom: 9px; }
+  table.dt { border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
+  table.dt th, table.dt td { padding: 3px 10px 3px 0; text-align: right; font-weight: 700; }
+  table.dt th { color: var(--muted); font-size: 11px; letter-spacing: 0.04em; }
+  table.dt td:first-child, table.dt th:first-child { text-align: left; }
+  table.dt .an { font-weight: 800; }
+  .dnote { font-size: 11px; color: var(--muted); font-style: italic; margin-top: 7px; }
+  .ccheck { border-top: 1px dashed var(--line); padding: 13px 18px; }
+  .cc-title { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 800; margin-bottom: 11px; }
+  .cc-group { margin-bottom: 11px; }
+  .cc-h { font-size: 11.5px; color: var(--muted); display: block; margin-bottom: 7px; }
+  .cc-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .cc-chip { font-size: 12px; font-weight: 700; padding: 5px 9px; border-radius: 999px; background: var(--band-a); border: 1px solid var(--line); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .cc-chip.ok { color: var(--good); border-color: var(--good); }
+  .cc-chip.over { color: var(--over); border-color: var(--over); }
+  .objbar { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); padding: 12px 18px; font-size: 13px; color: var(--muted); }
+  .objbar b { font-size: 19px; color: var(--accent); font-variant-numeric: tabular-nums; }
+
+  /* --- Scan-to-play QR: small, centered at the bottom --- */
+  .qr-card { width: 172px; margin: 22px auto 0; background: #ffffff; border: 1px solid #d6e2ee; border-radius: 12px; padding: 12px 12px 10px; text-align: center; box-shadow: 0 8px 22px rgba(23,65,107,0.16); }
+  .qr-card .qr-title { font-size: 12px; font-weight: 800; color: #17416b; margin-bottom: 8px; }
+  .qr-card .qr-img { width: 132px; height: 132px; display: block; margin: 0 auto; }
+  .qr-card .qr-url { font-size: 8px; color: #5c7994; margin-top: 8px; word-break: break-all; line-height: 1.35; font-family: ui-monospace, Menlo, monospace; }
+</style>
+
+<div class="wrap">
+
+  <div class="intro">
+    <p class="eyebrow">Invest the Fund</p>
+    <h1>Markowitz Portfolio</h1>
+    <p>You have <b>₩1,000,000</b> to invest for one year across three assets, in <b>₩100,000 lots</b>.
+    <b>Drag a bar</b> up or down (or tap −/+) to build your portfolio. You may leave cash uninvested
+    (it earns nothing), but never spend more than the budget. Reach an <b>expected profit of at least
+    ₩100,000</b> (a 10% return on the fund) with the <b>smallest possible risk</b>, the standard
+    deviation of your profit. Everyone faces the same market — hit <b>Reset</b> to start over.</p>
+  </div>
+
+  <div class="dash">
+    <div class="col-game">
+    <div class="sheet">
+    <div class="fund">
+      <div class="cash">
+        <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+          <g stroke="#26301b" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round">
+            <rect x="16" y="66" width="88" height="30" rx="6" fill="#4c7a4c"/>
+            <rect x="12" y="48" width="96" height="30" rx="6" fill="#5b8f5b"/>
+            <rect x="16" y="30" width="88" height="30" rx="6" fill="#6da36d"/>
+            <circle cx="60" cy="45" r="11" fill="#e8f0dd"/>
+            <text x="60" y="50" text-anchor="middle" font-size="13" font-weight="800" fill="#26301b" stroke="none">₩</text>
+            <circle cx="94" cy="94" r="14" fill="#d9b24a"/>
+            <text x="94" y="99" text-anchor="middle" font-size="13" font-weight="800" fill="#26301b" stroke="none">₩</text>
+          </g>
+        </svg>
+      </div>
+      <div class="gauge-col">
+        <div class="cap-label">Capital invested: <span id="invout">₩0</span> / ₩1,000,000</div>
+        <div class="gauge" id="ginv"><div class="fill" id="finv"></div></div>
+        <div class="cap-label">Expected profit: <span id="profout">₩0</span> / target ≥ ₩100,000</div>
+        <div class="gauge" id="gprof"><div class="fill" id="fprof"></div><div class="tick" style="left:66.67%"></div></div>
+        <div class="readout">
+          <div><span class="k">Risk (1σ) </span><b id="riskout">₩0</b></div>
+          <div><span class="k">Return </span><b id="retout">0.0%</b></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chartbox">
+      <svg id="chart" viewBox="0 0 600 330" xmlns="http://www.w3.org/2000/svg" aria-label="Portfolio allocation chart — drag bars to invest"></svg>
+    </div>
+    <div class="afoot" id="afoot"></div>
+  </div>
+
+  <div class="bar">
+    <div class="hint" id="hint">Drag each bar to invest in ₩100,000 lots.</div>
+    <div class="spacer"></div>
+    <button class="action" id="reset">Reset</button>
+    <button class="action submit" id="submit" disabled>Submit</button>
+  </div>
+    </div>
+    <aside class="col-form">
+      <div class="form-head">Markowitz Model</div>
+      <div class="math">
+        <div class="mrow"><span class="mlabel">minimize</span><span class="mexpr">x<sup>T</sup>&Sigma;x</span><span class="mval" id="objval">σ = 0.0%</span></div>
+        <div class="mrow sub"><span class="mlabel">subject to</span><span class="mexpr">&mu;<sup>T</sup>x &#8805; 0.10</span><span class="mnote">expected return at least 10%</span></div>
+        <div class="mrow sub"><span class="mlabel"></span><span class="mexpr">x<sub>B</sub> + x<sub>T</sub> + x<sub>E</sub> &#8804; 1</span><span class="mnote">invest at most ₩1,000,000</span></div>
+        <div class="mrow sub"><span class="mlabel"></span><span class="mexpr">x<sub>j</sub> &#8712; {0, 0.1, &#8230;, 1}</span><span class="mnote">whole ₩100,000 lots</span></div>
+        <div class="vardef">x<sub>j</sub> = share of the ₩1,000,000 in asset <i>j</i> (0.1 = one lot);
+        whatever is left over sits in cash earning 0. The objective is the variance of your return;
+        we display its square root σ — the standard deviation — in ₩. With finer and finer lots this
+        becomes the classic Markowitz QP (continuous optimum: 39% / 29% / 31%, σ = 13.0%).</div>
+      </div>
+      <div class="datablk">
+        <div class="cc-title">Data — mean <span style="text-transform:none">&mu;</span>, covariance &Sigma;</div>
+        <table class="dt" id="dt"></table>
+        <div class="dnote">Σ<sub>bond,energy</sub> = 0 — bonds and energy move independently. Risk hides in the off-diagonals.</div>
+      </div>
+      <div class="ccheck">
+        <div class="cc-title">Constraints — live</div>
+        <div class="cc-group"><span class="cc-h">Budget: invest at most ₩1,000,000</span><div class="cc-row"><span class="cc-chip" id="budchip"></span></div></div>
+        <div class="cc-group" style="margin-bottom:0"><span class="cc-h">Return target</span><div class="cc-row"><span class="cc-chip" id="retchip"></span></div></div>
+      </div>
+      <div class="objbar"><span>Objective&nbsp; risk σ = &#8730;(x<sup>T</sup>&Sigma;x)</span><b id="objbar">₩0</b></div>
+    </aside>
+  </div>
+  <div class="qr-card"><div class="qr-title">📱 Scan to play</div><img class="qr-img" src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27225%27%20height%3D%27225%27%20class%3D%27segno%27%3E%3Cg%20transform%3D%27scale%285%29%27%3E%3Cpath%20fill%3D%27%23fff%27%20d%3D%27M0%200h45v45h-45z%27%2F%3E%3Cpath%20class%3D%27qrline%27%20stroke%3D%27%2312233a%27%20d%3D%27M4%204.5h7m2%200h4m2%200h4m1%200h1m1%200h1m1%200h3m1%200h1m1%200h7m-37%201h1m5%200h1m2%200h1m1%200h1m1%200h4m2%200h1m1%200h1m3%200h1m1%200h1m2%200h1m5%200h1m-37%201h1m1%200h3m1%200h1m1%200h2m2%200h1m1%200h1m1%200h1m2%200h3m2%200h1m1%200h3m1%200h1m1%200h3m1%200h1m-37%201h1m1%200h3m1%200h1m1%200h2m1%200h1m1%200h3m1%200h1m1%200h1m2%200h1m1%200h2m1%200h1m2%200h1m1%200h3m1%200h1m-37%201h1m1%200h3m1%200h1m1%200h1m3%200h3m3%200h2m2%200h2m1%200h2m1%200h1m1%200h1m1%200h3m1%200h1m-37%201h1m5%200h1m1%200h4m2%200h2m2%200h1m3%200h1m1%200h2m1%200h1m2%200h1m5%200h1m-37%201h7m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h7m-29%201h1m2%200h1m2%200h2m-16%201h1m1%200h5m2%200h5m1%200h1m2%200h1m1%200h3m1%200h2m1%200h2m1%200h5m-34%201h1m1%200h1m1%200h1m6%200h1m2%200h2m4%200h1m6%200h1m2%200h1m3%200h1m-36%201h1m5%200h1m2%200h2m2%200h1m3%200h1m2%200h5m2%200h2m2%200h1m1%200h4m-37%201h3m1%200h2m2%200h1m1%200h2m4%200h1m4%200h3m3%200h1m2%200h3m3%200h1m-37%201h3m2%200h4m1%200h1m1%200h3m2%200h1m2%200h1m1%200h2m1%200h1m2%200h3m1%200h5m-37%201h2m2%200h1m6%200h2m3%200h6m1%200h1m1%200h2m1%200h1m2%200h1m-32%201h1m1%200h1m1%200h3m3%200h1m1%200h2m1%200h1m1%200h1m2%200h2m3%200h4m1%200h4m1%200h2m-37%201h1m2%200h1m1%200h1m3%200h3m3%200h1m1%200h2m2%200h2m1%200h1m2%200h1m1%200h4m3%200h1m-37%201h1m1%200h1m1%200h5m2%200h1m3%200h2m2%200h1m1%200h1m1%200h5m1%200h2m1%200h1m1%200h3m-35%201h4m2%200h1m1%200h3m1%200h2m2%200h1m1%200h3m1%200h1m3%200h2m1%200h1m2%200h2m-33%201h1m2%200h5m3%200h3m1%200h2m4%200h5m1%200h2m2%200h3m-37%201h1m2%200h3m1%200h2m2%200h1m1%200h1m1%200h1m3%200h3m2%200h1m1%200h1m1%200h5m3%200h1m-37%201h2m1%200h1m2%200h5m4%200h3m1%200h1m4%200h2m1%200h1m1%200h2m1%200h3m-31%201h1m4%200h2m5%200h1m1%200h3m2%200h1m1%200h2m1%200h1m4%200h1m1%200h1m-35%201h1m1%200h4m1%200h1m3%200h1m2%200h2m1%200h1m1%200h1m1%200h1m4%200h1m2%200h4m1%200h2m-37%201h4m4%200h5m3%200h1m2%200h2m2%200h1m3%200h1m3%200h2m-29%201h1m1%200h3m2%200h2m1%200h1m3%200h5m1%200h7m1%200h1m1%200h1m1%200h1m-37%201h2m5%200h6m2%200h3m6%200h1m1%200h1m1%200h1m5%200h1m-35%201h1m1%200h2m1%200h2m1%200h1m1%200h1m2%200h1m6%200h1m1%200h1m1%200h1m2%200h3m1%200h3m1%200h2m-37%201h1m2%200h1m1%200h1m2%200h1m1%200h5m1%200h1m4%200h1m6%200h1m2%200h2m3%200h1m-37%201h1m1%200h1m1%200h3m2%200h2m1%200h1m1%200h1m2%200h1m4%200h4m2%200h7m1%200h1m-29%201h5m4%200h3m1%200h1m1%200h1m2%200h1m1%200h1m3%200h2m1%200h1m-36%201h7m2%200h4m1%200h4m2%200h2m2%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h3m-37%201h1m5%200h1m1%200h2m2%200h1m1%200h1m2%200h7m4%200h1m3%200h2m1%200h1m-36%201h1m1%200h3m1%200h1m1%200h2m2%200h1m2%200h2m2%200h1m1%200h1m1%200h10m1%200h2m-36%201h1m1%200h3m1%200h1m1%200h1m1%200h2m1%200h1m1%200h1m2%200h1m1%200h1m1%200h2m4%200h3m1%200h3m1%200h1m-37%201h1m1%200h3m1%200h1m1%200h1m4%200h4m2%200h1m1%200h1m3%200h4m6%200h2m-37%201h1m5%200h1m2%200h4m2%200h1m3%200h4m4%200h2m3%200h1m3%200h1m-37%201h7m1%200h2m2%200h2m1%200h3m1%200h1m2%200h4m3%200h1m2%200h5%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E" alt="QR code to open the game on a phone"/><div class="qr-url">hankpark0706.github.io/ip-games/portfolio-markowitz.html</div></div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-head" id="mhead">
+      <h2 id="mtitle"></h2>
+      <p id="msub"></p>
+    </div>
+    <div class="modal-body">
+      <div class="scoreline"><span>Your risk (1σ)</span><span class="n" id="myscore"></span></div>
+      <div class="scoreline"><span>Optimal risk (1σ)</span><span class="n opt" id="optscore"></span></div>
+      <div class="assign-list">
+        <h3>Optimal portfolio</h3>
+        <div id="optlist"></div>
+      </div>
+    </div>
+    <div class="note" id="mnote"></div>
+    <div class="modal-foot">
+      <button class="action" id="close">Keep Tweaking</button>
+      <button class="action submit" id="retry">Try Again</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---- the market: 3 assets from the course note (yearly returns) ----------
+  const ASSETS = [
+    { id:"bond",   name:"Bond",   color:"#2a78d6" },
+    { id:"tech",   name:"Tech",   color:"#eb6834" },
+    { id:"energy", name:"Energy", color:"#1baf7a" },
+  ];
+  const MU  = [0.06, 0.10, 0.15];
+  const SIG = [
+    [0.010, 0.001, 0.000],
+    [0.001, 0.040, 0.015],
+    [0.000, 0.015, 0.090],
+  ];
+  const R = 0.10;            // target expected return
+  const B = 10;              // lots
+  const LOT = 100000;        // ₩ per lot
+  const BUDGET = B * LOT;    // ₩1,000,000
+  const PROF_MAX = 0.15 * BUDGET;  // gauge range: all-in energy = ₩150,000
+
+  const lots = [0, 0, 0];
+
+  // ---- linear algebra on lots -------------------------------------------
+  function retOf(x){ return x.reduce((s, l, i) => s + MU[i] * l / B, 0); }
+  function varOf(x){
+    let v = 0;
+    for (let i = 0; i < 3; i++)
+      for (let j = 0; j < 3; j++) v += SIG[i][j] * (x[i]/B) * (x[j]/B);
+    return v;
+  }
+  const sdW = x => Math.sqrt(varOf(x)) * BUDGET;  // σ in ₩ (per ₩1,000,000)
+
+  // Exact optimum by enumeration over every split of AT MOST 10 lots (the
+  // budget is an inequality — idle cash is allowed, earning 0 return at 0
+  // risk). Verified against the continuous QP (39/29/31, σ 12.98%): the lot
+  // grid lands on (5,1,4), σ ₩136,382, return tight at 10% — and the whole
+  // budget in play. Under-investing never wins here: the return floor then
+  // forces the remaining money into riskier concentration.
+  function bestPortfolio(){
+    let best = null;
+    for (let a = 0; a <= B; a++)
+      for (let t = 0; t <= B - a; t++)
+        for (let e = 0; e <= B - a - t; e++){
+          const x = [a, t, e];
+          if (retOf(x) < R - 1e-12) continue;
+          const v = varOf(x);
+          if (!best || v < best.v) best = { v, x };
+        }
+    return best;
+  }
+  const best = bestPortfolio();
+  const allTech = [0, B, 0];  // same 10% expected return, far more risk
+
+  const fmtW = n => "₩" + Math.round(n).toLocaleString("en-US");
+  const pct = (v, d=1) => (100 * v).toFixed(d) + "%";
+
+  // ---- chart geometry ----------------------------------------------------
+  const W = 600, H = 330, BASE = 300, TOP = 50, LOTH = (BASE - TOP) / B;
+  const COLW = W / 3, BARW = 96;
+  const yOf = l => BASE - l * LOTH;
+
+  function barPath(cx, l){
+    const x = cx - BARW / 2, y = yOf(l), r = 7;
+    return "M" + x + " " + BASE + " L" + x + " " + (y + r) +
+           " Q" + x + " " + y + " " + (x + r) + " " + y +
+           " L" + (x + BARW - r) + " " + y +
+           " Q" + (x + BARW) + " " + y + " " + (x + BARW) + " " + (y + r) +
+           " L" + (x + BARW) + " " + BASE + " Z";
+  }
+
+  const chart = document.getElementById("chart");
+  function drawChart(){
+    const total = lots.reduce((a, b) => a + b, 0);
+    const over = total > B;
+    let s = "";
+    for (let l = 0; l <= B; l++){
+      const major = l % 5 === 0;
+      s += '<line x1="6" y1="' + yOf(l) + '" x2="594" y2="' + yOf(l) + '" stroke="var(--grid)" stroke-width="' + (major ? 1.6 : 1) + '"' + (major ? '' : ' stroke-dasharray="2 5"') + '/>';
+      if (major) s += '<text x="8" y="' + (yOf(l) - 4) + '" font-size="10.5" font-weight="700" fill="var(--muted)">' + (l === 0 ? "₩0" : l === 5 ? "₩500k" : "₩1M") + '</text>';
+    }
+    for (let i = 0; i < 3; i++){
+      const cx = COLW * i + COLW / 2, l = lots[i];
+      if (l === 0){
+        s += '<rect x="' + (cx - BARW/2) + '" y="' + (BASE - 8) + '" width="' + BARW + '" height="8" rx="4" fill="' + ASSETS[i].color + '" opacity="0.28"/>';
+        s += '<text x="' + cx + '" y="' + (BASE - 16) + '" text-anchor="middle" font-size="12" font-weight="700" fill="var(--muted)">₩0 — drag ⇕</text>';
+      } else {
+        s += '<path d="' + barPath(cx, l) + '" fill="' + ASSETS[i].color + '"' +
+             (over ? ' stroke="var(--over)" stroke-width="3.5"' : '') + '/>';
+        // grip: three short lines near the bar top, "this edge drags"
+        for (let g = 0; g < 3; g++)
+          s += '<line x1="' + (cx - 11) + '" y1="' + (yOf(l) + 6 + 4*g) + '" x2="' + (cx + 11) + '" y2="' + (yOf(l) + 6 + 4*g) + '" stroke="rgba(255,255,255,0.75)" stroke-width="1.6"/>';
+        s += '<text x="' + cx + '" y="' + (yOf(l) - 9) + '" text-anchor="middle" font-size="14.5" font-weight="800" fill="var(--ink)">' + fmtW(l * LOT) + '</text>';
+      }
+      s += '<rect class="colhit" data-i="' + i + '" x="' + (COLW * i) + '" y="26" width="' + COLW + '" height="' + (H - 26) + '" fill="transparent"/>';
+    }
+    if (over)
+      s += '<text x="594" y="20" text-anchor="end" font-size="13" font-weight="800" fill="var(--over)">over budget by ' + fmtW((total - B) * LOT) + '</text>';
+    chart.innerHTML = s;
+  }
+
+  // drag anywhere in a column: tap sets the bar, drag slides it (lot-snapped)
+  let dragI = -1;
+  function lotsAt(clientY){
+    const r = chart.getBoundingClientRect();
+    const vy = (clientY - r.top) * H / r.height;
+    return Math.max(0, Math.min(B, Math.round((BASE - vy) / LOTH)));
+  }
+  chart.addEventListener("pointerdown", e => {
+    const hit = e.target.closest(".colhit");
+    if (!hit) return;
+    dragI = +hit.dataset.i;
+    chart.setPointerCapture(e.pointerId);
+    lots[dragI] = lotsAt(e.clientY);
+    render();
+    e.preventDefault();
+  });
+  chart.addEventListener("pointermove", e => {
+    if (dragI < 0) return;
+    const l = lotsAt(e.clientY);
+    if (l !== lots[dragI]){ lots[dragI] = l; render(); }
+  });
+  const endDrag = () => { dragI = -1; };
+  chart.addEventListener("pointerup", endDrag);
+  chart.addEventListener("pointercancel", endDrag);
+
+  // ---- per-asset footer: name, μ/σ, stepper -----------------------------
+  const afoot = document.getElementById("afoot");
+  ASSETS.forEach((a, i) => {
+    const d = document.createElement("div");
+    d.innerHTML =
+      '<div class="aname"><span class="dot" style="background:' + a.color + '"></span>' + a.name + '</div>' +
+      '<div class="astats">μ ' + pct(MU[i], 0) + ' · σ ±' + pct(Math.sqrt(SIG[i][i]), 0) + '</div>' +
+      '<div class="astep">' +
+      '<button data-i="' + i + '" data-d="-1" aria-label="sell one lot of ' + a.name + '">−</button>' +
+      '<span class="lots" id="lots' + i + '"></span>' +
+      '<button data-i="' + i + '" data-d="1" aria-label="buy one lot of ' + a.name + '">+</button>' +
+      '</div>';
+    afoot.appendChild(d);
+  });
+  afoot.addEventListener("click", e => {
+    const bn = e.target.closest("button");
+    if (!bn || bn.disabled) return;
+    const i = +bn.dataset.i;
+    lots[i] = Math.max(0, Math.min(B, lots[i] + +bn.dataset.d));
+    render();
+  });
+
+  // ---- data table (right panel) -----------------------------------------
+  (function(){
+    let h = '<tr><th>asset</th><th>&mu;<sub>j</sub></th><th>&Sigma; ·B</th><th>·T</th><th>·E</th></tr>';
+    ASSETS.forEach((a, i) => {
+      h += '<tr><td class="an" style="color:' + a.color + '">' + a.name + '</td><td>' + pct(MU[i], 0) + '</td>' +
+           SIG[i].map(v => '<td>' + v.toFixed(3) + '</td>').join("") + '</tr>';
+    });
+    document.getElementById("dt").innerHTML = h;
+  })();
+
+  // ---- render ------------------------------------------------------------
+  function render(){
+    drawChart();
+    const total = lots.reduce((a, b) => a + b, 0);
+    const invested = total * LOT;
+    const over = total > B, full = total === B;
+    const ret = retOf(lots), profit = ret * BUDGET;
+    const risk = sdW(lots);
+    const retOK = ret >= R - 1e-12;
+
+    lots.forEach((l, i) => {
+      document.getElementById("lots" + i).innerHTML =
+        l + (l === 1 ? " lot" : " lots") + "<small>" + fmtW(l * LOT) + "</small>";
+    });
+
+    document.getElementById("invout").textContent = fmtW(invested);
+    document.getElementById("invout").className = over ? "over" : "";
+    document.getElementById("ginv").classList.toggle("over", over);
+    document.getElementById("ginv").classList.remove("met");
+    document.getElementById("finv").style.width = Math.min(total / B, 1) * 100 + "%";
+
+    document.getElementById("profout").textContent = fmtW(profit);
+    document.getElementById("profout").className = retOK ? "met" : "";
+    document.getElementById("gprof").classList.toggle("met", retOK);
+    document.getElementById("fprof").style.width = Math.min(profit / PROF_MAX, 1) * 100 + "%";
+
+    document.getElementById("riskout").textContent = fmtW(risk);
+    document.getElementById("retout").textContent = pct(ret);
+
+    const hint = document.getElementById("hint");
+    hint.className = "hint";
+    if (over){
+      hint.textContent = "Over budget by " + fmtW(invested - BUDGET) + " — drag a bar down.";
+      hint.classList.add("warn");
+    } else if (total === 0){
+      hint.textContent = "Drag each bar to invest in ₩100,000 lots.";
+    } else if (!retOK){
+      hint.textContent = "Expected profit " + fmtW(profit) + " is below ₩100,000 — " +
+        (full ? "shift money toward tech or energy." : "invest more, or shift toward tech or energy.");
+      hint.classList.add("warn");
+    } else {
+      hint.textContent = "Feasible ✓ — now minimize the risk, then Submit." +
+        (full ? "" : "  (" + fmtW(BUDGET - invested) + " sits idle)");
+      hint.classList.add("ok");
+    }
+    document.getElementById("submit").disabled = over || !retOK;
+
+    // formulation panel
+    document.getElementById("objval").textContent = "σ = " + pct(Math.sqrt(varOf(lots)));
+    document.getElementById("objbar").textContent = fmtW(risk);
+    const bud = document.getElementById("budchip");
+    bud.innerHTML = "x<sub>B</sub>+x<sub>T</sub>+x<sub>E</sub> = " + (total / B).toFixed(1) +
+                    (over ? " &gt; 1" : " ≤ 1") + " &nbsp;(" + fmtW(invested) + ")";
+    bud.classList.toggle("ok", total > 0 && !over);
+    bud.classList.toggle("over", over);
+    const rc = document.getElementById("retchip");
+    rc.innerHTML = "μ<sup>T</sup>x = " + pct(ret) + (retOK ? " ≥ 10%" : " &lt; 10%");
+    rc.classList.toggle("ok", retOK && total > 0);
+    rc.classList.toggle("over", !retOK && full);
+  }
+
+  document.getElementById("reset").onclick = () => { lots.fill(0); render(); };
+
+  // ---- submit / modal ----------------------------------------------------
+  const overlay = document.getElementById("overlay");
+  function showResult(){
+    const v = varOf(lots), risk = sdW(lots);
+    const win = v <= best.v + 1e-12;
+    const techRisk = sdW(allTech);
+    const morePct = Math.round(100 * (techRisk / sdW(best.x) - 1));
+    const head = document.getElementById("mhead");
+    head.className = "modal-head " + (win ? "win" : "lose");
+    document.getElementById("mtitle").textContent = win ? "📈 Efficient portfolio!" : "Not efficient yet";
+    document.getElementById("msub").textContent = win
+      ? "Minimum possible risk for a 10% expected return."
+      : "The same expected profit is possible with less risk.";
+    document.getElementById("myscore").textContent = fmtW(risk);
+    document.getElementById("optscore").textContent = fmtW(sdW(best.x));
+    const rows = best.x.map((l, i) =>
+      '<div class="assign-row"><span style="color:' + ASSETS[i].color + '">' + ASSETS[i].name +
+      '</span><span class="b">' + l + (l === 1 ? " lot" : " lots") + ' &middot; ' + fmtW(l * LOT) + '</span></div>');
+    rows.push('<div class="assign-row" style="border-top:1px dashed var(--line);margin-top:6px;padding-top:8px"><span>Total</span><span class="b">expected profit ' +
+      fmtW(retOf(best.x) * BUDGET) + ' &middot; risk ' + fmtW(sdW(best.x)) + '</span></div>');
+    document.getElementById("optlist").innerHTML = rows.join("");
+    document.getElementById("mnote").textContent = win
+      ? "All-in tech promises the same ₩100,000 expected profit — at " + fmtW(techRisk) +
+        " of risk, " + morePct + "% more than yours. Your mix leans on the zero correlation between " +
+        "bond and energy, with one tech lot to fine-tune. Both constraints are tight: μᵀx = 10% " +
+        "exactly, and every ₩ is invested — idle cash is allowed, but it never helps, since the " +
+        "return floor would push the rest into riskier concentration."
+      : "You carry " + fmtW(risk) + " of risk; " + fmtW(sdW(best.x)) + " is possible. Expected return " +
+        "averages linearly, but risk does not — the covariance cross-terms shrink when you mix assets " +
+        "that move independently (Σ between bond and energy is 0). Try a bond–energy core with a pinch " +
+        "of tech — and put the whole ₩1,000,000 to work: idle cash only forces concentration elsewhere.";
+    overlay.classList.add("open");
+  }
+
+  document.getElementById("submit").onclick = showResult;
+  document.getElementById("close").onclick = () => overlay.classList.remove("open");
+  document.getElementById("retry").onclick = () => { overlay.classList.remove("open"); lots.fill(0); render(); };
+  overlay.addEventListener("click", e => { if (e.target === overlay) overlay.classList.remove("open"); });
+
+  render();
+</script>
