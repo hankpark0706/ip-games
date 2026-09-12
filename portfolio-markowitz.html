@@ -132,8 +132,6 @@
     .astep { gap: 3px; }
     .astep button { width: 24px; height: 24px; font-size: 14px; }
     .astep .share { min-width: 44px; font-size: 12px; }
-    /* the won amount is already on the bar; drop it here so the steppers fit */
-    .astep .share small { display: none; }
     .afoot .aname { font-size: 13px; }
     .afoot .astats { font-size: 10.5px; }
   }
@@ -236,7 +234,7 @@
   <div class="intro">
     <p class="eyebrow">Invest the Fund</p>
     <h1>Markowitz Portfolio</h1>
-    <p>You have <b>₩1,000,000</b> and three assets. Split it to earn an expected
+    <p>You have <b>$100</b> and three assets. Split it to earn an expected
     <b>10% this year</b> at the <b>smallest possible risk</b>. Drag a bar, or tap −/+.</p>
   </div>
 
@@ -251,19 +249,19 @@
             <rect x="12" y="48" width="96" height="30" rx="6" fill="#5b8f5b"/>
             <rect x="16" y="30" width="88" height="30" rx="6" fill="#6da36d"/>
             <circle cx="60" cy="45" r="11" fill="#e8f0dd"/>
-            <text x="60" y="50" text-anchor="middle" font-size="13" font-weight="800" fill="#26301b" stroke="none">₩</text>
+            <text x="60" y="50" text-anchor="middle" font-size="13" font-weight="800" fill="#26301b" stroke="none">$</text>
             <circle cx="94" cy="94" r="14" fill="#d9b24a"/>
-            <text x="94" y="99" text-anchor="middle" font-size="13" font-weight="800" fill="#26301b" stroke="none">₩</text>
+            <text x="94" y="99" text-anchor="middle" font-size="13" font-weight="800" fill="#26301b" stroke="none">$</text>
           </g>
         </svg>
       </div>
       <div class="gauge-col">
-        <div class="cap-label">Capital invested: <span id="invout">₩0</span> / ₩1,000,000</div>
+        <div class="cap-label">Capital invested: <span id="invout">$0.00</span> / $100.00</div>
         <div class="gauge" id="ginv"><div class="fill" id="finv"></div></div>
-        <div class="cap-label">Expected profit: <span id="profout">₩0</span> / target ≥ ₩100,000</div>
+        <div class="cap-label">Expected profit: <span id="profout">$0.00</span> / target ≥ $10.00</div>
         <div class="gauge" id="gprof"><div class="fill" id="fprof"></div><div class="tick" style="left:66.67%"></div></div>
         <div class="readout">
-          <div><span class="k">Risk (1σ) </span><b id="riskout">₩0</b></div>
+          <div><span class="k">Risk (1σ) </span><b id="riskout">$0.00</b></div>
           <div><span class="k">Return </span><b id="retout">0.0%</b></div>
         </div>
       </div>
@@ -287,12 +285,12 @@
       <div class="math">
         <div class="mrow"><span class="mlabel">minimize</span><span class="mexpr">x<sup>T</sup>&Sigma;x</span><span class="mval" id="objval">σ = 0.0%</span></div>
         <div class="mrow sub"><span class="mlabel">subject to</span><span class="mexpr">&mu;<sup>T</sup>x &#8805; 0.10</span><span class="mnote">expected return at least 10%</span></div>
-        <div class="mrow sub"><span class="mlabel"></span><span class="mexpr">x<sub>B</sub> + x<sub>T</sub> + x<sub>E</sub> &#8804; 1</span><span class="mnote">invest at most ₩1,000,000</span></div>
+        <div class="mrow sub"><span class="mlabel"></span><span class="mexpr">x<sub>B</sub> + x<sub>T</sub> + x<sub>E</sub> &#8804; 1</span><span class="mnote">invest at most $100</span></div>
         <div class="mrow sub"><span class="mlabel"></span><span class="mexpr">x<sub>j</sub> &#8805; 0</span><span class="mnote">no short selling</span></div>
-        <div class="vardef">x<sub>j</sub> = share of the ₩1,000,000 in asset <i>j</i>; whatever is
+        <div class="vardef">x<sub>j</sub> = share of the $100 in asset <i>j</i>; whatever is
         left over sits in cash earning 0. Weights are continuous — any fraction of the budget is
         allowed — so this is the classic Markowitz quadratic program. The objective is the variance
-        of your return; we display its square root σ — the standard deviation — in ₩.</div>
+        of your return; we display its square root σ — the standard deviation — in dollars.</div>
       </div>
       <div class="datablk">
         <div class="cc-title">Data — mean <span style="text-transform:none">&mu;</span>, covariance &Sigma;</div>
@@ -301,10 +299,10 @@
       </div>
       <div class="ccheck">
         <div class="cc-title">Constraints — live</div>
-        <div class="cc-group"><span class="cc-h">Budget: invest at most ₩1,000,000</span><div class="cc-row"><span class="cc-chip" id="budchip"></span></div></div>
+        <div class="cc-group"><span class="cc-h">Budget: invest at most $100</span><div class="cc-row"><span class="cc-chip" id="budchip"></span></div></div>
         <div class="cc-group" style="margin-bottom:0"><span class="cc-h">Return target</span><div class="cc-row"><span class="cc-chip" id="retchip"></span></div></div>
       </div>
-      <div class="objbar"><span>Objective&nbsp; risk σ = &#8730;(x<sup>T</sup>&Sigma;x)</span><b id="objbar">₩0</b></div>
+      <div class="objbar"><span>Objective&nbsp; risk σ = &#8730;(x<sup>T</sup>&Sigma;x)</span><b id="objbar">$0.00</b></div>
     </aside>
   </div>
   <div class="qr-card"><div class="qr-title">📱 Scan to play</div><img class="qr-img" src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27225%27%20height%3D%27225%27%20class%3D%27segno%27%3E%3Cg%20transform%3D%27scale%285%29%27%3E%3Cpath%20fill%3D%27%23fff%27%20d%3D%27M0%200h45v45h-45z%27%2F%3E%3Cpath%20class%3D%27qrline%27%20stroke%3D%27%2312233a%27%20d%3D%27M4%204.5h7m2%200h4m2%200h4m1%200h1m1%200h1m1%200h3m1%200h1m1%200h7m-37%201h1m5%200h1m2%200h1m1%200h1m1%200h4m2%200h1m1%200h1m3%200h1m1%200h1m2%200h1m5%200h1m-37%201h1m1%200h3m1%200h1m1%200h2m2%200h1m1%200h1m1%200h1m2%200h3m2%200h1m1%200h3m1%200h1m1%200h3m1%200h1m-37%201h1m1%200h3m1%200h1m1%200h2m1%200h1m1%200h3m1%200h1m1%200h1m2%200h1m1%200h2m1%200h1m2%200h1m1%200h3m1%200h1m-37%201h1m1%200h3m1%200h1m1%200h1m3%200h3m3%200h2m2%200h2m1%200h2m1%200h1m1%200h1m1%200h3m1%200h1m-37%201h1m5%200h1m1%200h4m2%200h2m2%200h1m3%200h1m1%200h2m1%200h1m2%200h1m5%200h1m-37%201h7m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h7m-29%201h1m2%200h1m2%200h2m-16%201h1m1%200h5m2%200h5m1%200h1m2%200h1m1%200h3m1%200h2m1%200h2m1%200h5m-34%201h1m1%200h1m1%200h1m6%200h1m2%200h2m4%200h1m6%200h1m2%200h1m3%200h1m-36%201h1m5%200h1m2%200h2m2%200h1m3%200h1m2%200h5m2%200h2m2%200h1m1%200h4m-37%201h3m1%200h2m2%200h1m1%200h2m4%200h1m4%200h3m3%200h1m2%200h3m3%200h1m-37%201h3m2%200h4m1%200h1m1%200h3m2%200h1m2%200h1m1%200h2m1%200h1m2%200h3m1%200h5m-37%201h2m2%200h1m6%200h2m3%200h6m1%200h1m1%200h2m1%200h1m2%200h1m-32%201h1m1%200h1m1%200h3m3%200h1m1%200h2m1%200h1m1%200h1m2%200h2m3%200h4m1%200h4m1%200h2m-37%201h1m2%200h1m1%200h1m3%200h3m3%200h1m1%200h2m2%200h2m1%200h1m2%200h1m1%200h4m3%200h1m-37%201h1m1%200h1m1%200h5m2%200h1m3%200h2m2%200h1m1%200h1m1%200h5m1%200h2m1%200h1m1%200h3m-35%201h4m2%200h1m1%200h3m1%200h2m2%200h1m1%200h3m1%200h1m3%200h2m1%200h1m2%200h2m-33%201h1m2%200h5m3%200h3m1%200h2m4%200h5m1%200h2m2%200h3m-37%201h1m2%200h3m1%200h2m2%200h1m1%200h1m1%200h1m3%200h3m2%200h1m1%200h1m1%200h5m3%200h1m-37%201h2m1%200h1m2%200h5m4%200h3m1%200h1m4%200h2m1%200h1m1%200h2m1%200h3m-31%201h1m4%200h2m5%200h1m1%200h3m2%200h1m1%200h2m1%200h1m4%200h1m1%200h1m-35%201h1m1%200h4m1%200h1m3%200h1m2%200h2m1%200h1m1%200h1m1%200h1m4%200h1m2%200h4m1%200h2m-37%201h4m4%200h5m3%200h1m2%200h2m2%200h1m3%200h1m3%200h2m-29%201h1m1%200h3m2%200h2m1%200h1m3%200h5m1%200h7m1%200h1m1%200h1m1%200h1m-37%201h2m5%200h6m2%200h3m6%200h1m1%200h1m1%200h1m5%200h1m-35%201h1m1%200h2m1%200h2m1%200h1m1%200h1m2%200h1m6%200h1m1%200h1m1%200h1m2%200h3m1%200h3m1%200h2m-37%201h1m2%200h1m1%200h1m2%200h1m1%200h5m1%200h1m4%200h1m6%200h1m2%200h2m3%200h1m-37%201h1m1%200h1m1%200h3m2%200h2m1%200h1m1%200h1m2%200h1m4%200h4m2%200h7m1%200h1m-29%201h5m4%200h3m1%200h1m1%200h1m2%200h1m1%200h1m3%200h2m1%200h1m-36%201h7m2%200h4m1%200h4m2%200h2m2%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h3m-37%201h1m5%200h1m1%200h2m2%200h1m1%200h1m2%200h7m4%200h1m3%200h2m1%200h1m-36%201h1m1%200h3m1%200h1m1%200h2m2%200h1m2%200h2m2%200h1m1%200h1m1%200h10m1%200h2m-36%201h1m1%200h3m1%200h1m1%200h1m1%200h2m1%200h1m1%200h1m2%200h1m1%200h1m1%200h2m4%200h3m1%200h3m1%200h1m-37%201h1m1%200h3m1%200h1m1%200h1m4%200h4m2%200h1m1%200h1m3%200h4m6%200h2m-37%201h1m5%200h1m2%200h4m2%200h1m3%200h4m4%200h2m3%200h1m3%200h1m-37%201h7m1%200h2m2%200h2m1%200h3m1%200h1m2%200h4m3%200h1m2%200h5%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E" alt="QR code to open the game on a phone"/><div class="qr-url">hankpark0706.github.io/ip-games/portfolio-markowitz.html</div></div>
@@ -346,11 +344,11 @@
     [0.000, 0.015, 0.090],
   ];
   const R = 0.10;                  // target expected return
-  const BUDGET = 1000000;          // the fund, in won
+  const BUDGET = 100;              // the fund, in dollars
   const STEP = 0.001;              // drag resolution: 0.1% of the fund = one won in a thousand
   const TAP  = 0.01;               // one press of -/+ moves 1% of the fund
   const WIN_TOL = 0.005;           // inside 0.5% of the least possible risk counts as efficient
-  const PROF_MAX = 0.15 * BUDGET;  // gauge range: everything in energy = 150,000
+  const PROF_MAX = 0.15 * BUDGET;  // gauge range: everything in energy = $15
 
   // continuous weights, each in [0, 1] -- no lot grid, no integrality
   const x = [0, 0, 0];
@@ -361,7 +359,7 @@
   const mul  = (M, w) => M.map(row => dot(row, w));
   const retOf = w => dot(MU, w);
   const varOf = w => dot(w, mul(SIG, w));
-  const sdW   = w => Math.sqrt(varOf(w)) * BUDGET;   // risk in won, per 1,000,000
+  const riskOf = w => Math.sqrt(varOf(w)) * BUDGET;  // standard deviation, in dollars
 
   // Exact continuous optimum of  min x'Sx  s.t.  mu'x >= R,  1'x <= 1,  x >= 0.
   // Sigma is positive definite, so the minimiser is unique. Both constraints
@@ -415,7 +413,7 @@
   const OPTSD = Math.sqrt(best.v);
   const allTech = [0, 1, 0];   // same 10% expected return, far more risk
 
-  const fmtW = n => "\u20a9" + Math.round(n).toLocaleString("en-US");
+  const money = n => "$" + n.toFixed(2);
   const pct  = (v, d=1) => (100 * v).toFixed(d) + "%";
 
   // ---- chart geometry ----------------------------------------------------
@@ -439,25 +437,25 @@
     for (let g = 0; g <= 10; g++){
       const w = g / 10, major = g % 5 === 0;
       s += '<line x1="6" y1="' + yOf(w) + '" x2="594" y2="' + yOf(w) + '" stroke="var(--grid)" stroke-width="' + (major ? 1.6 : 1) + '"' + (major ? '' : ' stroke-dasharray="2 5"') + '/>';
-      if (major) s += '<text x="8" y="' + (yOf(w) - 4) + '" font-size="10.5" font-weight="700" fill="var(--muted)">' + (g === 0 ? "\u20a90" : g === 5 ? "\u20a9500k" : "\u20a91M") + '</text>';
+      if (major) s += '<text x="8" y="' + (yOf(w) - 4) + '" font-size="10.5" font-weight="700" fill="var(--muted)">' + (g === 0 ? "$0" : g === 5 ? "$50" : "$100") + '</text>';
     }
     for (let i = 0; i < 3; i++){
       const cx = COLW * i + COLW / 2, w = x[i];
       if (w < STEP / 2){
         s += '<rect x="' + (cx - BARW/2) + '" y="' + (BASE - 8) + '" width="' + BARW + '" height="8" rx="4" fill="' + ASSETS[i].color + '" opacity="0.28"/>';
-        s += '<text x="' + cx + '" y="' + (BASE - 16) + '" text-anchor="middle" font-size="12" font-weight="700" fill="var(--muted)">\u20a90 \u2014 drag \u21d5</text>';
+        s += '<text x="' + cx + '" y="' + (BASE - 16) + '" text-anchor="middle" font-size="12" font-weight="700" fill="var(--muted)">$0 \u2014 drag \u21d5</text>';
       } else {
         s += '<path d="' + barPath(cx, w) + '" fill="' + ASSETS[i].color + '"' +
              (over ? ' stroke="var(--over)" stroke-width="3.5"' : '') + '/>';
         // grip: three short lines near the bar top, "this edge drags"
         for (let g = 0; g < 3; g++)
           s += '<line x1="' + (cx - 11) + '" y1="' + (yOf(w) + 6 + 4*g) + '" x2="' + (cx + 11) + '" y2="' + (yOf(w) + 6 + 4*g) + '" stroke="rgba(255,255,255,0.75)" stroke-width="1.6"/>';
-        s += '<text x="' + cx + '" y="' + (yOf(w) - 9) + '" text-anchor="middle" font-size="14.5" font-weight="800" fill="var(--ink)">' + fmtW(w * BUDGET) + '</text>';
+        s += '<text x="' + cx + '" y="' + (yOf(w) - 9) + '" text-anchor="middle" font-size="14.5" font-weight="800" fill="var(--ink)">' + money(w * BUDGET) + '</text>';
       }
       s += '<rect class="colhit" data-i="' + i + '" x="' + (COLW * i) + '" y="26" width="' + COLW + '" height="' + (H - 26) + '" fill="transparent"/>';
     }
     if (over)
-      s += '<text x="594" y="20" text-anchor="end" font-size="13" font-weight="800" fill="var(--over)">over budget by ' + fmtW((total - 1) * BUDGET) + '</text>';
+      s += '<text x="594" y="20" text-anchor="end" font-size="13" font-weight="800" fill="var(--over)">over budget by ' + money((total - 1) * BUDGET) + '</text>';
     chart.innerHTML = s;
   }
 
@@ -527,51 +525,51 @@
     const invested = total * BUDGET;
     const over = total > 1 + 1e-9, full = total >= 1 - 1e-9 && !over;
     const ret = retOf(x), profit = ret * BUDGET;
-    const risk = sdW(x);
+    const risk = riskOf(x);
     const retOK = ret >= R - 1e-9;
 
     x.forEach((w, i) => {
       document.getElementById("share" + i).innerHTML =
-        pct(w, 1) + "<small>" + fmtW(w * BUDGET) + "</small>";
+        pct(w, 1) + "<small>" + money(w * BUDGET) + "</small>";
     });
 
-    document.getElementById("invout").textContent = fmtW(invested);
+    document.getElementById("invout").textContent = money(invested);
     document.getElementById("invout").className = over ? "over" : "";
     document.getElementById("ginv").classList.toggle("over", over);
     document.getElementById("finv").style.width = Math.min(total, 1) * 100 + "%";
 
-    document.getElementById("profout").textContent = fmtW(profit);
+    document.getElementById("profout").textContent = money(profit);
     document.getElementById("profout").className = retOK ? "met" : "";
     document.getElementById("gprof").classList.toggle("met", retOK);
     document.getElementById("fprof").style.width = Math.min(profit / PROF_MAX, 1) * 100 + "%";
 
-    document.getElementById("riskout").textContent = fmtW(risk);
+    document.getElementById("riskout").textContent = money(risk);
     document.getElementById("retout").textContent = pct(ret);
 
     const hint = document.getElementById("hint");
     hint.className = "hint";
     if (over){
-      hint.textContent = "Over budget by " + fmtW(invested - BUDGET) + " \u2014 drag a bar down.";
+      hint.textContent = "Over budget by " + money(invested - BUDGET) + " \u2014 drag a bar down.";
       hint.classList.add("warn");
     } else if (total < STEP / 2){
       hint.textContent = "Drag a bar up, or tap \u2212/+, to invest.";
     } else if (!retOK){
-      hint.textContent = "Expected profit " + fmtW(profit) + " is below \u20a9100,000 \u2014 " +
+      hint.textContent = "Expected profit " + money(profit) + " is below $10 \u2014 " +
         (full ? "shift money toward tech or energy." : "invest more, or shift toward tech or energy.");
       hint.classList.add("warn");
     } else {
       hint.textContent = "Feasible \u2713 \u2014 now minimise the risk, then Submit." +
-        (full ? "" : "  (" + fmtW(BUDGET - invested) + " sits idle)");
+        (full ? "" : "  (" + money(BUDGET - invested) + " sits idle)");
       hint.classList.add("ok");
     }
     document.getElementById("submit").disabled = over || !retOK;
 
     // formulation panel
     document.getElementById("objval").textContent = "\u03c3 = " + pct(Math.sqrt(varOf(x)));
-    document.getElementById("objbar").textContent = fmtW(risk);
+    document.getElementById("objbar").textContent = money(risk);
     const bud = document.getElementById("budchip");
     bud.innerHTML = "x<sub>B</sub>+x<sub>T</sub>+x<sub>E</sub> = " + total.toFixed(3) +
-                    (over ? " &gt; 1" : " \u2264 1") + " &nbsp;(" + fmtW(invested) + ")";
+                    (over ? " &gt; 1" : " \u2264 1") + " &nbsp;(" + money(invested) + ")";
     bud.classList.toggle("ok", total > STEP / 2 && !over);
     bud.classList.toggle("over", over);
     const rc = document.getElementById("retchip");
@@ -585,9 +583,9 @@
   // ---- submit / modal ----------------------------------------------------
   const overlay = document.getElementById("overlay");
   function showResult(){
-    const risk = sdW(x), mySD = Math.sqrt(varOf(x));
+    const risk = riskOf(x), mySD = Math.sqrt(varOf(x));
     const win = mySD <= OPTSD * (1 + WIN_TOL);
-    const techRisk = sdW(allTech);
+    const techRisk = riskOf(allTech);
     const morePct = Math.round(100 * (techRisk / (OPTSD * BUDGET) - 1));
     const head = document.getElementById("mhead");
     head.className = "modal-head " + (win ? "win" : "lose");
@@ -595,25 +593,25 @@
     document.getElementById("msub").textContent = win
       ? "Within 0.5% of the least risk possible at a 10% expected return."
       : "The same expected profit is possible with less risk.";
-    document.getElementById("myscore").textContent = fmtW(risk);
-    document.getElementById("optscore").textContent = fmtW(OPTSD * BUDGET);
+    document.getElementById("myscore").textContent = money(risk);
+    document.getElementById("optscore").textContent = money(OPTSD * BUDGET);
     const rows = best.x.map((w, i) =>
       '<div class="assign-row"><span style="color:' + ASSETS[i].color + '">' + ASSETS[i].name +
-      '</span><span class="b">' + pct(w, 1) + ' &middot; ' + fmtW(w * BUDGET) + '</span></div>');
+      '</span><span class="b">' + pct(w, 1) + ' &middot; ' + money(w * BUDGET) + '</span></div>');
     rows.push('<div class="assign-row" style="border-top:1px dashed var(--line);margin-top:6px;padding-top:8px"><span>Total</span><span class="b">expected profit ' +
-      fmtW(retOf(best.x) * BUDGET) + ' &middot; risk ' + fmtW(OPTSD * BUDGET) + '</span></div>');
+      money(retOf(best.x) * BUDGET) + ' &middot; risk ' + money(OPTSD * BUDGET) + '</span></div>');
     document.getElementById("optlist").innerHTML = rows.join("");
     document.getElementById("mnote").textContent = win
-      ? "All-in tech promises the same \u20a9100,000 expected profit \u2014 at " + fmtW(techRisk) +
+      ? "All-in tech promises the same $10 expected profit \u2014 at " + money(techRisk) +
         " of risk, " + morePct + "% more than yours. Your mix leans on the zero correlation between " +
-        "bond and energy. Both constraints are tight: \u03bc\u1d40x = 10% exactly, and every won is " +
+        "bond and energy. Both constraints are tight: \u03bc\u1d40x = 10% exactly, and every dollar is " +
         "invested \u2014 idle cash is allowed, but it never helps, since the return floor would push " +
         "the rest into riskier concentration. The frontier is flat near the bottom, so several nearby " +
         "mixes are almost as good; anything inside 0.5% of the best counts."
-      : "You carry " + fmtW(risk) + " of risk; " + fmtW(OPTSD * BUDGET) + " is possible. Expected return " +
+      : "You carry " + money(risk) + " of risk; " + money(OPTSD * BUDGET) + " is possible. Expected return " +
         "averages linearly, but risk does not \u2014 the covariance cross-terms shrink when you mix assets " +
         "that move independently (\u03a3 between bond and energy is 0). Try a bond\u2013energy core with a slice " +
-        "of tech \u2014 and put the whole \u20a91,000,000 to work: idle cash only forces concentration elsewhere.";
+        "of tech \u2014 and put the whole $100 to work: idle cash only forces concentration elsewhere.";
     overlay.classList.add("open");
   }
 
