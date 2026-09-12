@@ -182,6 +182,8 @@
   .assign-row { display: flex; justify-content: space-between; font-size: 14px; padding: 4px 0; }
   .assign-row span:first-child { font-weight: 700; }
   .assign-row .b { color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .optchart { margin: 14px 0 2px; }
+  .optchart svg { display: block; width: 100%; height: auto; }
   .note { font-size: 12.5px; color: var(--muted); line-height: 1.55; padding: 6px 22px 4px; }
   .modal-foot { padding: 12px 22px 20px; display: flex; gap: 10px; }
   .modal-foot button { flex: 1; }
@@ -320,6 +322,7 @@
       <div class="assign-list">
         <h3>Optimal portfolio</h3>
         <div id="optlist"></div>
+        <div class="optchart" id="optchart"></div>
       </div>
     </div>
     <div class="note" id="mnote"></div>
@@ -580,6 +583,31 @@
 
   document.getElementById("reset").onclick = () => { x.fill(0); render(); };
 
+  // ---- the optimal portfolio as a bar chart, for the result modal ---------
+  // Same three bars as the notebook figure: height = the share of the fund,
+  // labelled with the percentage and the dollars. Bars start at zero, so the
+  // heights are in true proportion to each other.
+  function optBarsSVG(){
+    const W = 384, H = 162, BASE = 124, PAD = 16;
+    const SLOT = (W - 2 * PAD) / 3, BW = 54, TALL = 102;
+    const scale = TALL / Math.max.apply(null, best.x);
+    let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Optimal portfolio: ' +
+            best.x.map((w, i) => ASSETS[i].name + ' ' + pct(w, 1)).join(', ') + '">';
+    s += '<line x1="' + PAD + '" y1="' + BASE + '" x2="' + (W - PAD) + '" y2="' + BASE +
+         '" stroke="var(--line)" stroke-width="1"/>';
+    best.x.forEach((w, i) => {
+      const cx = PAD + SLOT * (i + 0.5);
+      const h = w * scale, y = BASE - h;
+      s += '<rect x="' + (cx - BW / 2) + '" y="' + y + '" width="' + BW + '" height="' + h +
+           '" rx="5" fill="' + ASSETS[i].color + '"/>';
+      s += '<text x="' + cx + '" y="' + (y - 8) + '" text-anchor="middle" font-size="14" ' +
+           'font-weight="800" fill="var(--ink)">' + pct(w, 1) + '</text>';
+      s += '<text x="' + cx + '" y="' + (BASE + 17) + '" text-anchor="middle" font-size="12" ' +
+           'font-weight="800" fill="' + ASSETS[i].color + '">' + ASSETS[i].name + '</text>';
+    });
+    return s + '</svg>';
+  }
+
   // ---- submit / modal ----------------------------------------------------
   const overlay = document.getElementById("overlay");
   function showResult(){
@@ -601,6 +629,7 @@
     rows.push('<div class="assign-row" style="border-top:1px dashed var(--line);margin-top:6px;padding-top:8px"><span>Total</span><span class="b">expected profit ' +
       money(retOf(best.x) * BUDGET) + ' &middot; risk ' + money(OPTSD * BUDGET) + '</span></div>');
     document.getElementById("optlist").innerHTML = rows.join("");
+    document.getElementById("optchart").innerHTML = optBarsSVG();
     document.getElementById("mnote").textContent = win
       ? "All-in tech promises the same $10 expected profit \u2014 at " + money(techRisk) +
         " of risk, " + morePct + "% more than yours. Your mix leans on the zero correlation between " +
