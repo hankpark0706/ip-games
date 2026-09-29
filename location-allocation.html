@@ -1,0 +1,653 @@
+<title>Location Allocation Problem</title>
+<style>
+  :root {
+    --sky-top: #cfe8fb; --sky-bot: #eaf5fd;
+    --panel: #ffffff; --line: #cfe0ee;
+    --band-a: #eaf4fc; --band-b: #ffffff;
+    --accent: #1f5f9e; --ink: #163a5c; --muted: #5c7994;
+    --head-bg: #17416b; --head-ink: #eef6fc;
+    --ring: #3f7cae;
+    --hover: #f1f7fd;
+    --good: #2e8b57; --over: #c2603a;
+    --town: #b0553f; --depot: #5b6a3c;
+    --val-supply: #2e8b57; --val-demand: #c2603a; --val-cost: #c07a1f; --val-cap: #1f8a8a;
+    --cell-bg: #f4f9fd;
+  }
+  :root[data-theme="dark"] {
+    --sky-top: #0c1a28; --sky-bot: #101f30;
+    --panel: #132436; --line: #274a68;
+    --band-a: #18324b; --band-b: #132436;
+    --accent: #8fc6f5; --ink: #dcecfa; --muted: #93b3ce;
+    --head-bg: #0a1826; --head-ink: #dcecfa;
+    --ring: #5b9bd0;
+    --hover: #182f45;
+    --good: #67c896; --over: #e08a63;
+    --town: #d17a63; --depot: #7d8f57;
+    --val-supply: #67c896; --val-demand: #e08a63; --val-cost: #e0aa5a; --val-cap: #5fc0c0;
+    --cell-bg: #16283c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --sky-top: #0c1a28; --sky-bot: #101f30;
+      --panel: #132436; --line: #274a68;
+      --band-a: #18324b; --band-b: #132436;
+      --accent: #8fc6f5; --ink: #dcecfa; --muted: #93b3ce;
+      --head-bg: #0a1826; --head-ink: #dcecfa;
+      --ring: #5b9bd0;
+      --hover: #182f45;
+      --good: #67c896; --over: #e08a63;
+      --town: #d17a63; --depot: #7d8f57;
+      --val-supply: #67c896; --val-demand: #e08a63; --val-cost: #e0aa5a; --val-cap: #5fc0c0;
+      --cell-bg: #16283c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh;
+    background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bot) 55%, var(--panel) 100%);
+    display: flex; justify-content: center; align-items: flex-start; padding: 44px 16px;
+    font-family: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    color: var(--ink);
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(closest-side at 18% 20%, rgba(255,255,255,0.7), transparent 70%),
+      radial-gradient(closest-side at 80% 12%, rgba(255,255,255,0.55), transparent 70%),
+      radial-gradient(closest-side at 60% 26%, rgba(255,255,255,0.45), transparent 70%);
+  }
+  .wrap { position: relative; z-index: 1; width: 100%; max-width: 1160px; }
+  .intro { margin: 0 2px 14px; }
+  .eyebrow { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin: 0 0 4px; }
+  .intro h1 { margin: 0 0 6px; font-size: 24px; font-weight: 800; letter-spacing: -0.01em; }
+  .intro p { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--muted); }
+
+  .sheet {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; overflow: hidden; box-shadow: 0 12px 34px rgba(23,65,107,0.18);
+  }
+  .pack {
+    display: flex; align-items: center; gap: 26px; flex-wrap: wrap;
+    padding: 16px 22px; background: var(--head-bg); color: var(--head-ink);
+  }
+  .readout .k { opacity: 0.8; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; display: block; margin-bottom: 3px; }
+  .readout b { font-size: 22px; font-variant-numeric: tabular-nums; }
+  .readout.ok b { color: #8fe0b4; }
+  .readout.bad b { color: #f0b090; }
+  .costline {
+    flex-basis: 100%; font-size: 15px;
+    font-variant-numeric: tabular-nums; letter-spacing: 0.01em;
+  }
+  .costline b { font-size: 17px; }
+  .costline .n-open { color: #a9d98b; }
+  .costline .n-stock { color: #8fc6f5; }
+  .costline .n-tr { color: #5fc0c0; }
+  .costline .pen, .costline .pen b { color: #f0b090; }
+
+  /* stage picker + the two levers p and B */
+  .levers {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    padding: 11px 16px; background: var(--band-a); border-bottom: 1px solid var(--line);
+  }
+  .stagechip {
+    font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer;
+    padding: 6px 11px; border-radius: 999px;
+    background: var(--panel); border: 1px solid var(--line); color: var(--muted);
+  }
+  .stagechip:hover { background: var(--hover); }
+  .stagechip.on { color: var(--head-ink); background: var(--head-bg); border-color: var(--head-bg); }
+  .lever { display: inline-flex; align-items: center; gap: 8px; }
+  .ltag { font-size: 11.5px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+  .ltag b { color: var(--accent); font-size: 13px; }
+  .ac-step {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--panel); border: 1.5px solid var(--line); border-radius: 9px;
+    padding: 3px 6px; box-shadow: 0 3px 8px rgba(23,65,107,0.22);
+  }
+  .ac-step.live { border-color: var(--accent); }
+  .ac-step button {
+    width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--line);
+    background: var(--band-a); color: var(--ink); font-size: 16px; font-weight: 800;
+    cursor: pointer; line-height: 1; display: flex; align-items: center; justify-content: center; transition: filter .1s, opacity .1s;
+  }
+  .ac-step button:hover:not(:disabled) { filter: brightness(0.95); }
+  .ac-step button:disabled { opacity: 0.3; cursor: not-allowed; }
+  .ac-step button:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; }
+  .ac-step .flow { min-width: 22px; text-align: center; font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .ac-step .flow.zero { color: var(--muted); }
+
+  .diagram { padding: 14px 14px 4px; }
+  .dwrap { position: relative; width: 100%; user-select: none; -webkit-user-select: none; }
+  .dwrap svg { width: 100%; height: auto; display: block; }
+  .node-ctl { position: absolute; transform: translate(-50%, 0); }
+  /* drag-to-stock, as in the Markowitz game: grab the bar (or the town) and pull up/down */
+  .dwrap circle[data-drag] { cursor: ns-resize; touch-action: none; }
+  .dwrap rect[data-bar] { cursor: ns-resize; touch-action: none; }
+  .node-ctl .ac-step { cursor: ns-resize; touch-action: none; }
+  .node-ctl .ac-step button { cursor: pointer; }
+  .node-ctl .dhint { font-size: 10px; color: var(--muted); margin-left: 1px; }
+  .node-ctl .ac-step.dragging { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(63,124,174,0.25); }
+
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; padding: 2px 22px 10px; font-size: 12px; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+  .oring { width: 12px; height: 12px; border-radius: 50%; display: inline-block; background: none; }
+
+  .balrow { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 16px 16px; }
+  .balchip {
+    font-size: 12.5px; font-weight: 700; padding: 6px 11px; border-radius: 999px;
+    background: var(--band-a); border: 1px solid var(--line); color: var(--muted);
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .balchip.ok { color: var(--good); border-color: var(--good); }
+  .balchip.no { color: var(--over); border-color: var(--over); }
+  .balchip .tag { width: 9px; height: 9px; border-radius: 50%; }
+
+  .bar {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 14px 18px; margin-top: 14px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(23,65,107,0.12);
+  }
+  .hint { font-size: 13px; color: var(--muted); }
+  .spacer { margin-left: auto; }
+  button.action {
+    font: inherit; font-weight: 700; font-size: 14px; cursor: pointer;
+    padding: 9px 18px; border-radius: 8px; border: 1px solid var(--line);
+    background: var(--band-a); color: var(--ink); transition: filter .12s;
+  }
+  button.action:hover { filter: brightness(0.96); }
+  button.submit { background: var(--head-bg); color: var(--head-ink); border-color: var(--head-bg); }
+  button.submit:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .overlay {
+    position: fixed; inset: 0; z-index: 10; display: none;
+    align-items: center; justify-content: center; padding: 20px;
+    background: rgba(12,26,40,0.55); backdrop-filter: blur(3px);
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    width: 100%; max-width: 480px; background: var(--panel);
+    border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+    box-shadow: 0 24px 60px rgba(12,26,40,0.4); animation: pop .2s ease;
+  }
+  @keyframes pop { from { transform: translateY(12px) scale(0.97); opacity: 0; } to { transform: none; opacity: 1; } }
+  .modal-head { padding: 18px 22px; color: #fff; }
+  .modal-head.win { background: linear-gradient(135deg, #2e8b57, #1f6b45); }
+  .modal-head.lose { background: linear-gradient(135deg, #17416b, #0f2c49); }
+  .modal-head h2 { margin: 0; font-size: 20px; font-weight: 800; }
+  .modal-head p { margin: 4px 0 0; font-size: 13px; opacity: 0.9; }
+  .modal-body { padding: 18px 22px 8px; }
+  .scoreline { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; font-size: 14px; }
+  .scoreline .n { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .scoreline .n.opt { color: var(--good); }
+  .assign-list { margin: 8px 0 4px; border-top: 1px dashed var(--line); padding-top: 12px; }
+  .assign-list h3 { margin: 0 0 8px; font-size: 12px; letter-spacing: 0.04em; color: var(--muted); text-transform: uppercase; }
+  .assign-row { display: flex; justify-content: space-between; font-size: 14px; padding: 4px 0; }
+  .assign-row span:first-child { font-weight: 700; }
+  .assign-row .b { color: var(--accent); font-weight: 700; }
+  .note { font-size: 12.5px; color: var(--muted); line-height: 1.55; padding: 6px 22px 4px; }
+  .modal-foot { padding: 12px 22px 20px; display: flex; gap: 10px; }
+  .modal-foot button { flex: 1; }
+
+  /* --- dashboard: game left, formulation + p/B table right --- */
+  .dash { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.9fr); gap: 18px; align-items: start; }
+  @media (max-width: 900px) { .dash { grid-template-columns: 1fr; } }
+  .col-game { min-width: 0; }
+  .col-side { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+  .col-form { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 12px 34px rgba(23,65,107,0.10); overflow: hidden; }
+  .form-head { background: var(--head-bg); color: var(--head-ink); font-weight: 800; font-size: 14px; padding: 13px 18px; border-bottom: 3px solid var(--ring); }
+  .math { padding: 16px 18px 12px; overflow-x: auto; }
+  .mrow { display: flex; align-items: baseline; gap: 10px; margin-bottom: 9px; }
+  .mrow.sub { margin-bottom: 7px; }
+  .mlabel { width: 74px; flex: none; text-align: right; font-size: 11.5px; font-style: italic; color: var(--muted); }
+  .mexpr { font-family: "Cambria Math", Cambria, Georgia, "Times New Roman", serif; font-size: 16px; color: var(--ink); white-space: nowrap; }
+  .mexpr sub { font-size: 10px; } .mexpr sup { font-size: 10px; }
+  .mnote { font-size: 11px; color: var(--muted); font-style: italic; }
+  .mval { margin-left: auto; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; font-size: 18px; }
+  .mval.cs { font-size: 13px; }
+  .mval.tight { color: var(--over); }
+  .vardef { font-size: 11px; color: var(--muted); line-height: 1.5; border-top: 1px dashed var(--line); margin-top: 8px; padding-top: 10px; }
+  .vardef sub { font-size: 9px; }
+  .objbar { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); padding: 12px 18px; font-size: 13px; color: var(--muted); }
+  .objbar b { font-size: 20px; color: var(--accent); font-variant-numeric: tabular-nums; }
+
+  /* --- Scan-to-play QR: small, centered at the bottom --- */
+  .qr-card { width: 172px; margin: 22px auto 0; background: #ffffff; border: 1px solid #d6e2ee; border-radius: 12px; padding: 12px 12px 10px; text-align: center; box-shadow: 0 8px 22px rgba(23,65,107,0.16); }
+  .qr-card .qr-title { font-size: 12px; font-weight: 800; color: #17416b; margin-bottom: 8px; }
+  .qr-card .qr-img { width: 132px; height: 132px; display: block; margin: 0 auto; }
+  .qr-card .qr-url { font-size: 8px; color: #5c7994; margin-top: 8px; word-break: break-all; line-height: 1.35; font-family: ui-monospace, Menlo, monospace; }
+</style>
+
+<div class="wrap">
+
+  <div class="intro">
+    <p class="eyebrow">Prepositioning Relief · choose facilities · place stock</p>
+    <h1>Location Allocation Problem</h1>
+    <p>Open at most <b>p facilities</b> and preposition up to <b>B</b> relief stock. Place facilities and stock at the lowest total cost — then Submit and see if you beat the optimizer.</p>
+  </div>
+
+  <div class="dash">
+    <div class="col-game">
+    <div class="sheet">
+    <div class="pack">
+      <div class="readout"><span class="k">Facilities open</span><b><span id="ndep">0</span> / <span id="pcap">1</span></b></div>
+      <div class="readout"><span class="k">Stock placed</span><b><span id="nstk">0</span> / <span id="bcap">65</span></b></div>
+      <div class="readout" id="shbox"><span class="k">Shortage</span><b id="shv">—</b></div>
+      <div class="readout"><span class="k">Total cost</span><b id="cost">0</b></div>
+      <div class="costline" id="costline"></div>
+    </div>
+
+    <div class="levers">
+      <span id="stagechips"></span>
+      <span class="spacer"></span>
+      <span class="ltag" id="fixedpb">p = 2 facilities &middot; B = 65 units</span>
+    </div>
+
+    <div class="diagram"><div class="dwrap" id="dwrap"></div></div>
+
+    <div class="balrow" id="balrow"></div>
+  </div>
+
+  <div class="bar">
+    <div class="spacer"></div>
+    <button class="action" id="reset">Reset</button>
+    <button class="action submit" id="submit" disabled>Submit</button>
+  </div>
+    </div>
+
+    <aside class="col-side">
+    <div class="col-form">
+      <div class="form-head">Integer Program</div>
+      <div class="math">
+        <div class="mrow"><span class="mlabel">minimize</span><span class="mexpr">&#8721;<sub>j</sub> (c<sub>j</sub>x<sub>j</sub> + f<sub>j</sub>r<sub>j</sub>) + &#8721;<sub>a</sub> t<sub>a</sub>y<sub>a</sub> + &#8721;<sub>j</sub> (u<sub>j</sub>q<sub>j</sub> + o<sub>j</sub>s<sub>j</sub>)</span><span class="mval" id="objval">0</span></div>
+        <div class="mrow sub"><span class="mlabel">subject to</span><span class="mexpr">flow in &#8722; flow out + q<sub>j</sub> &#8722; s<sub>j</sub> = d<sub>j</sub> &#8722; r<sub>j</sub></span><span class="mnote">&#8704;j</span></div>
+        <div class="mrow sub"><span class="mlabel"></span><span class="mexpr">&#8721;<sub>j</sub> x<sub>j</sub> &#8804; p</span><span class="mnote">facility cap</span><span class="mval cs" id="pcon">0 / 1</span></div>
+        <div class="mrow sub"><span class="mlabel"></span><span class="mexpr">&#8721;<sub>j</sub> r<sub>j</sub> &#8804; B,&nbsp; r<sub>j</sub> &#8804; B&#183;x<sub>j</sub></span><span class="mnote">budget</span><span class="mval cs" id="bcon">0 / 65</span></div>
+        <div class="mrow sub"><span class="mlabel"></span><span class="mexpr">x<sub>j</sub> &#8712; {0,1},&nbsp; r<sub>j</sub>, y<sub>a</sub>, s<sub>j</sub> &#8712; R<sub>+</sub>,&nbsp; 0 &#8804; q<sub>j</sub> &#8804; d<sub>j</sub></span></div>
+        <div class="vardef">
+          x<sub>j</sub> = open a facility at node <i>j</i> (c<sub>j</sub> = 100 each);&nbsp; r<sub>j</sub> = inventory units stocked there (f<sub>j</sub> = 10 each);&nbsp;
+          y<sub>a</sub> = units shipped on road <i>a</i> (t<sub>a</sub> printed on the map, per unit, per road — shipments may relay through nodes);&nbsp;
+          q<sub>j</sub> = shortage (u<sub>j</sub> = 60 each);&nbsp; s<sub>j</sub> = unused stock (o<sub>j</sub> = 1 each).
+          You set <b>x</b> and <b>r</b>; the shipping y, q, s is auto-solved at cheapest cost for your plan.
+        </div>
+      </div>
+      <div class="objbar"><span>Objective&nbsp; (your plan, routed optimally)</span><b id="objbar">0</b></div>
+    </div>
+    </aside>
+  </div>
+
+  <div class="qr-card"><div class="qr-title">📱 Scan to play</div><img class="qr-img" src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27215%27%20height%3D%27215%27%20class%3D%27segno%27%3E%3Cg%20transform%3D%27scale%285%29%27%3E%3Cpath%20fill%3D%27%23fff%27%20d%3D%27M0%200h43v43h-43z%27%2F%3E%3Cpath%20class%3D%27qrline%27%20stroke%3D%27%2312233a%27%20d%3D%27M3%203.5h7m2%200h2m2%200h4m1%200h2m3%200h2m1%200h1m3%200h7m-37%201h1m5%200h1m1%200h1m2%200h1m1%200h2m4%200h1m5%200h1m2%200h1m1%200h1m5%200h1m-37%201h1m1%200h3m1%200h1m1%200h2m4%200h1m1%200h1m2%200h3m2%200h1m1%200h1m1%200h1m1%200h1m1%200h3m1%200h1m-37%201h1m1%200h3m1%200h1m1%200h1m1%200h2m3%200h3m1%200h3m2%200h5m1%200h1m1%200h3m1%200h1m-37%201h1m1%200h3m1%200h1m2%200h3m1%200h4m1%200h2m2%200h2m1%200h2m1%200h1m1%200h1m1%200h3m1%200h1m-37%201h1m5%200h1m2%200h1m3%200h1m2%200h1m1%200h1m2%200h2m1%200h3m3%200h1m5%200h1m-37%201h7m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h7m-29%201h2m2%200h2m1%200h1m5%200h1m5%200h1m-28%201h1m5%200h1m1%200h1m2%200h1m2%200h1m3%200h1m1%200h3m1%200h2m1%200h1m1%200h2m2%200h3m-35%201h1m2%200h1m4%200h1m1%200h1m1%200h2m5%200h1m1%200h1m3%200h2m3%200h5m-36%201h3m2%200h3m2%200h2m1%200h2m2%200h1m2%200h5m2%200h2m4%200h1m1%200h2m-37%201h2m2%200h1m2%200h1m1%200h2m4%200h2m5%200h2m6%200h4m2%200h1m-37%201h2m3%200h4m2%200h1m2%200h1m1%200h1m2%200h1m6%200h1m3%200h2m1%200h1m2%200h1m-35%201h2m1%200h1m2%200h2m1%200h1m1%200h1m1%200h6m2%200h1m1%200h4m2%200h1m1%200h1m1%200h1m-36%201h1m1%200h1m2%200h5m5%200h1m1%200h1m2%200h2m3%200h5m1%200h3m1%200h2m-37%201h3m2%200h1m1%200h1m1%200h1m1%200h2m4%200h2m1%200h1m3%200h1m1%200h1m1%200h1m1%200h2m1%200h4m-35%201h2m2%200h1m2%200h3m1%200h1m2%200h1m2%200h1m1%200h1m1%200h5m1%200h2m1%200h1m1%200h1m1%200h1m-35%201h1m1%200h1m4%200h2m2%200h2m3%200h1m1%200h1m1%200h1m1%200h1m2%200h2m2%200h1m2%200h2m-36%201h1m2%200h4m1%200h1m1%200h3m2%200h1m1%200h2m1%200h1m1%200h3m2%200h4m1%200h1m1%200h1m1%200h1m-36%201h5m4%200h1m8%200h2m3%200h1m1%200h1m1%200h3m2%200h1m2%200h1m-37%201h2m2%200h3m1%200h1m2%200h2m2%200h1m1%200h1m1%200h1m4%200h2m1%200h1m1%200h2m1%200h3m-33%201h2m3%200h3m1%200h2m1%200h2m2%200h2m1%200h3m1%200h1m1%200h1m4%200h1m1%200h1m-35%201h1m4%200h3m2%200h1m2%200h1m1%200h2m1%200h1m1%200h1m1%200h1m4%200h1m1%200h1m1%200h3m1%200h2m-36%201h1m1%200h1m3%200h1m1%200h1m2%200h1m1%200h3m2%200h3m1%200h1m5%200h1m1%200h3m1%200h1m-35%201h2m1%200h1m1%200h1m2%200h5m2%200h3m2%200h1m1%200h2m2%200h1m2%200h2m3%200h2m-37%201h1m2%200h1m1%200h1m1%200h2m2%200h1m4%200h2m3%200h1m2%200h1m1%200h3m2%200h1m1%200h2m-35%201h1m3%200h7m1%200h1m1%200h1m5%200h1m1%200h1m1%200h1m2%200h3m1%200h1m2%200h3m-37%201h1m1%200h1m1%200h1m3%200h2m1%200h2m2%200h1m4%200h1m1%200h1m3%200h1m1%200h1m2%200h1m1%200h2m1%200h1m-37%201h1m2%200h4m1%200h2m2%200h3m2%200h1m4%200h4m1%200h8m1%200h1m-29%201h1m6%200h1m1%200h3m3%200h1m2%200h3m3%200h1m-33%201h7m2%200h4m2%200h1m3%200h1m1%200h5m2%200h1m1%200h1m1%200h1m3%200h1m-37%201h1m5%200h1m6%200h3m1%200h4m1%200h2m3%200h2m3%200h1m2%200h1m-36%201h1m1%200h3m1%200h1m2%200h1m5%200h2m2%200h1m1%200h1m1%200h10m1%200h2m-36%201h1m1%200h3m1%200h1m2%200h2m2%200h2m1%200h1m1%200h1m2%200h1m1%200h1m2%200h2m1%200h2m2%200h1m2%200h1m-37%201h1m1%200h3m1%200h1m3%200h1m1%200h1m1%200h3m2%200h1m1%200h1m3%200h4m4%200h4m-37%201h1m5%200h1m2%200h2m1%200h2m5%200h2m1%200h1m5%200h1m1%200h1m1%200h1m3%200h1m-37%201h7m1%200h1m1%200h2m2%200h2m4%200h1m3%200h1m1%200h1m1%200h1m2%200h1m1%200h1m2%200h1%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E" alt="QR code to open the game on a phone"/><div class="qr-url">hankpark0706.github.io/ip-games/location-allocation.html</div></div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-head" id="mhead">
+      <h2 id="mtitle"></h2>
+      <p id="msub"></p>
+    </div>
+    <div class="modal-body">
+      <div class="scoreline"><span>Your total cost</span><span class="n" id="myscore"></span></div>
+      <div class="scoreline"><span>Optimal (lowest) cost</span><span class="n opt" id="optscore"></span></div>
+      <div class="assign-list">
+        <h3>Optimal plan for this map</h3>
+        <div id="optlist"></div>
+      </div>
+    </div>
+    <div class="note" id="mnote"></div>
+    <div class="modal-foot">
+      <button class="action" id="close">Close</button>
+      <button class="action submit" id="retry">Try Again</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+// economics — same as module1_deterministic.py: open 100, stock 10/unit, shortage 60, surplus 1
+const C_OPEN=100, F_RES=10, U_SHORT=60, O_SURP=1, INF=1e15, STEP=5;
+const NAMES=["A","B","C","D","E","F","G","H"];
+
+// ---- FIXED problem instances (same for every student): each map fixes p and B too.
+const STAGES=[
+ { label:"3 nodes", vbh:300, p:2, b:65,
+   nodes:[{x:70,y:150,d:26},{x:280,y:205,d:10},{x:490,y:150,d:24}],
+   edges:[[0,1],[1,2]] },
+ { label:"5 nodes", vbh:345, p:2, b:55,
+   nodes:[{x:85,y:80,d:12},{x:65,y:258,d:20},{x:265,y:170,d:8},{x:475,y:80,d:16},{x:480,y:262,d:24}],
+   edges:[[0,2],[1,2],[2,3],[2,4],[3,4]] },
+ { label:"6 nodes", vbh:345, p:2, b:95,
+   nodes:[{x:70,y:85,d:12},{x:60,y:225,d:14},{x:160,y:160,d:16},
+          {x:400,y:195,d:18},{x:475,y:85,d:12},{x:480,y:272,d:16}],
+   edges:[[0,1],[0,2],[1,2],[3,4],[3,5],[4,5],[2,3]] },
+ { label:"8 nodes", vbh:350, p:3, b:110,
+   nodes:[{x:50,y:170,d:18},{x:160,y:125,d:8},{x:290,y:185,d:6},{x:420,y:130,d:10},
+          {x:140,y:268,d:22},{x:300,y:60,d:20},{x:510,y:68,d:16},{x:495,y:268,d:24}],
+   edges:[[0,1],[1,2],[2,3],[1,4],[2,5],[3,6],[3,7]] },
+];
+const VBW=560, RAD=24, BARH=52, BARW=11;
+const barX=nd=>nd.x+RAD+7, barY=nd=>nd.y-BARH/2;
+
+// per-stage preprocessing: road costs, all-pairs shortest paths + next hop
+for(const S of STAGES){
+  const n=S.nodes.length;
+  S.n=n; S.sumD=S.nodes.reduce((s,v)=>s+v.d,0);
+  S.ecost=S.edges.map(([a,b])=>Math.round(Math.hypot(S.nodes[a].x-S.nodes[b].x,S.nodes[a].y-S.nodes[b].y)/45*10)/10);
+  const D=Array.from({length:n},()=>Array(n).fill(INF)), NX=Array.from({length:n},()=>Array(n).fill(-1));
+  for(let i=0;i<n;i++){D[i][i]=0;NX[i][i]=i;}
+  S.edges.forEach(([a,b],k)=>{const w=S.ecost[k];
+    if(w<D[a][b]){D[a][b]=D[b][a]=w;NX[a][b]=b;NX[b][a]=a;}});
+  for(let k=0;k<n;k++)for(let i=0;i<n;i++)for(let j=0;j<n;j++)
+    if(D[i][k]+D[k][j]<D[i][j]-1e-12){D[i][j]=D[i][k]+D[k][j];NX[i][j]=NX[i][k];}
+  S.dist=D; S.next=NX;
+}
+
+// ---- exact optimum: enumerate depot sets ≤ p; inner stock/routing solve is greedy-exact
+//      (no per-depot capacity, so each town buys from its cheapest depot, cheapest units first)
+function innerSolve(S,set,B){
+  const n=S.n, r=Array(n).fill(0), short=Array(n).fill(0), assign=[];
+  let res=0, trans=0, rem=B;
+  const order=[];
+  for(let j=0;j<n;j++){
+    let bi=-1,bw=INF;
+    for(const i of set){const w=F_RES+S.dist[i][j]; if(w<bw-1e-12){bw=w;bi=i;}}
+    order.push({j,i:bi,w:bw});
+  }
+  order.sort((a,b)=>a.w-b.w);
+  for(const o of order){
+    const d=S.nodes[o.j].d;
+    if(o.i<0||o.w>=U_SHORT||rem<=1e-9){short[o.j]=d;continue;}
+    const amt=Math.min(d,rem); rem-=amt;
+    r[o.i]+=amt; res+=F_RES*amt; trans+=(o.w-F_RES)*amt;
+    if(amt>1e-9)assign.push({i:o.i,j:o.j,amt});
+    short[o.j]=d-amt;
+  }
+  const sh=short.reduce((a,b)=>a+b,0);
+  return {cost:C_OPEN*set.length+res+trans+U_SHORT*sh, set:set.slice(), r, short, assign, totShort:sh};
+}
+const optMemo={};
+function solveOpt(si,p,B){
+  const key=si+"|"+p+"|"+B;
+  if(optMemo[key])return optMemo[key];
+  const S=STAGES[si];
+  let best=innerSolve(S,[],B);
+  const rec=(start,set)=>{
+    if(set.length){const sol=innerSolve(S,set,B); if(sol.cost<best.cost-1e-9)best=sol;}
+    if(set.length>=p)return;
+    for(let i=start;i<S.n;i++){set.push(i);rec(i+1,set);set.pop();}
+  };
+  rec(0,[]);
+  return optMemo[key]=best;
+}
+
+// ---- exact scoring of the player's placement: min-cost-flow transportation solve
+function mcf(nv,src,snk,E){
+  const head=Array(nv).fill(-1),to=[],nx=[],cap=[],cst=[];
+  const add=(u,v,c,w)=>{to.push(v);cap.push(c);cst.push(w);nx.push(head[u]);head[u]=to.length-1;
+                        to.push(u);cap.push(0);cst.push(-w);nx.push(head[v]);head[v]=to.length-1;};
+  for(const[u,v,c,w]of E)add(u,v,c,w);
+  for(;;){
+    const dis=Array(nv).fill(INF),inq=Array(nv).fill(false),pe=Array(nv).fill(-1),q=[src];
+    dis[src]=0;
+    while(q.length){const u=q.shift();inq[u]=false;
+      for(let e=head[u];e!==-1;e=nx[e])if(cap[e]>1e-9&&dis[u]+cst[e]<dis[to[e]]-1e-9){
+        dis[to[e]]=dis[u]+cst[e];pe[to[e]]=e;if(!inq[to[e]]){inq[to[e]]=true;q.push(to[e]);}}}
+    if(dis[snk]>=INF/2)break;
+    let f=INF;for(let v=snk;v!==src;v=to[pe[v]^1])f=Math.min(f,cap[pe[v]]);
+    for(let v=snk;v!==src;v=to[pe[v]^1]){cap[pe[v]]-=f;cap[pe[v]^1]+=f;}
+  }
+  return {flowOf:e=>cap[2*e+1]};
+}
+function scorePlacement(si,rArr){
+  // Flow value = total demand: every demand unit is met by a depot or by the
+  // 60-cost shortage source. Unshipped stock never enters the network; it is
+  // surplus, charged O_SURP each after the solve.
+  const S=STAGES[si], n=S.n, open=[];
+  for(let i=0;i<n;i++)if(rArr[i]>1e-9)open.push(i);
+  const sumR=open.reduce((s,i)=>s+rArr[i],0);
+  const SUP=i=>2+open.indexOf(i), DEM=j=>2+open.length+j, SNK=2+open.length+n;
+  const E=[[0,1,S.sumD,0]];
+  for(const i of open){E.push([0,SUP(i),rArr[i],0]);
+    for(let j=0;j<n;j++)E.push([SUP(i),DEM(j),1e9,S.dist[i][j]]);}
+  for(let j=0;j<n;j++){E.push([1,DEM(j),1e9,U_SHORT]);E.push([DEM(j),SNK,S.nodes[j].d,0]);}
+  const r=mcf(SNK+1,0,SNK,E);
+  const assign=[],short=Array(n).fill(0);let trans=0,shipped=0,e=1;
+  for(const i of open){
+    for(let j=0;j<n;j++){const f=r.flowOf(e+1+j);
+      if(f>1e-6){assign.push({i,j,amt:f});trans+=f*S.dist[i][j];shipped+=f;}}
+    e+=1+n;}
+  for(let j=0;j<n;j++){short[j]=r.flowOf(e);e+=2;}
+  const sh=short.reduce((a,b)=>a+b,0), surpU=sumR-shipped;
+  return {cost:C_OPEN*open.length+F_RES*sumR+trans+U_SHORT*sh+surpU*O_SURP,
+          open, short, assign, totShort:sh,
+          bd:{fac:C_OPEN*open.length, res:F_RES*sumR, trans, shortc:U_SHORT*sh, surpU}};
+}
+
+// ---- state ----
+let si=0, P=1, B=65, r=[];
+const $=id=>document.getElementById(id);
+const stage=()=>STAGES[si];
+const usedR=()=>r.reduce((a,b)=>a+b,0);
+const openCount=()=>r.filter(v=>v>1e-9).length;
+
+function loadStage(k){
+  si=k; P=stage().p; B=stage().b; r=Array(stage().n).fill(0);
+  $("fixedpb").innerHTML="p = "+P+" facilities &middot; B = "+B+" units";
+  build(); render();
+}
+
+// ---- build the diagram (SVG roads + towns, HTML steppers under each town) ----
+const dwrap=$("dwrap");
+function build(){
+  const S=stage(); let s='<svg viewBox="0 0 '+VBW+' '+S.vbh+'" xmlns="http://www.w3.org/2000/svg">';
+  s+='<defs><marker id="arwF" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/></marker></defs>';
+  // roads + cost tags
+  S.edges.forEach(([a,b],k)=>{
+    const f=S.nodes[a],t=S.nodes[b];
+    const dx=t.x-f.x,dy=t.y-f.y,len=Math.hypot(dx,dy),ux=dx/len,uy=dy/len;
+    const x1=f.x+ux*RAD,y1=f.y+uy*RAD,x2=t.x-ux*RAD,y2=t.y-uy*RAD;
+    s+='<line id="rd'+k+'" x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="var(--muted)" stroke-width="2.2" stroke-dasharray="1 0"/>';
+    const mx=x1+(x2-x1)*0.62, my=y1+(y2-y1)*0.62;
+    s+='<rect x="'+(mx-17)+'" y="'+(my-9)+'" width="34" height="17" rx="5" fill="var(--panel)" stroke="var(--line)"/>'+
+       '<text x="'+mx+'" y="'+(my+3.8)+'" text-anchor="middle" font-size="10.5" font-weight="800" fill="var(--val-cost)">'+S.ecost[k].toFixed(1)+'</text>';
+    // flow overlay line (hidden until flow > 0) + amount label
+    s+='<line id="fl'+k+'" x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="var(--accent)" stroke-width="0" opacity="0.9"/>';
+    const lx=x1+(x2-x1)*0.34-(uy*11), ly=y1+(y2-y1)*0.34+(ux*11);
+    s+='<text id="ft'+k+'" x="'+lx+'" y="'+(ly+3.5)+'" text-anchor="middle" font-size="11" font-weight="800" fill="var(--accent)" style="paint-order:stroke" stroke="var(--panel)" stroke-width="3"></text>';
+  });
+  // towns
+  S.nodes.forEach((nd,i)=>{
+    // demand caption above the node: the word makes the number unambiguous
+    s+='<text x="'+nd.x+'" y="'+(nd.y-RAD-10)+'" text-anchor="middle">'
+      +'<tspan font-size="10.5" font-weight="700" fill="var(--muted)">demand </tspan>'
+      +'<tspan font-size="13.5" font-weight="800" fill="var(--val-demand)">'+nd.d+'</tspan></text>';
+    s+='<circle id="nc'+i+'" data-drag="'+i+'" cx="'+nd.x+'" cy="'+nd.y+'" r="'+RAD+'" fill="var(--town)" stroke="#ffffff" stroke-width="3"><title>drag up / down to stock node '+NAMES[i]+'</title></circle>';
+    s+='<text id="nd'+i+'" x="'+nd.x+'" y="'+(nd.y+5.5)+'" text-anchor="middle" font-size="15.5" font-weight="800" fill="#fff">'+NAMES[i]+'</text>';
+    // vertical stock gauge beside the node — fills bottom-up as pallets go in (scale: budget B);
+    // the shaded zone is this node's demand, so fill covering the zone = self-sufficient
+    const bx=barX(nd), by=barY(nd);
+    s+='<rect id="tk'+i+'" data-bar="'+i+'" x="'+bx+'" y="'+by+'" width="'+BARW+'" height="'+BARH+'" rx="5" fill="var(--panel)" stroke="var(--line)" stroke-width="1.2"><title>drag the bar to set stock at node '+NAMES[i]+'</title></rect>';
+    s+='<rect id="dz'+i+'" data-bar="'+i+'" x="'+(bx+2)+'" y="'+(by+BARH-2)+'" width="'+(BARW-4)+'" height="0" rx="3" fill="var(--val-demand)" opacity="0.3"><title>node '+NAMES[i]+'\'s own demand ('+nd.d+')</title></rect>';
+    s+='<rect id="fb'+i+'" data-bar="'+i+'" x="'+(bx+2)+'" y="'+(by+BARH-2)+'" width="'+(BARW-4)+'" height="0" rx="3" fill="var(--depot)"/>';
+  });
+  s+='</svg>';
+  // stock steppers under each town
+  let ctl="";
+  S.nodes.forEach((nd,i)=>{
+    ctl+='<div class="node-ctl" style="left:'+(nd.x/VBW*100)+'%;top:'+((nd.y+RAD+5)/S.vbh*100)+'%">'
+       +'<div class="ac-step" id="ns'+i+'">'
+       +'<button data-i="'+i+'" data-d="-1" aria-label="less stock at '+NAMES[i]+'">&minus;</button>'
+       +'<span class="flow zero" id="rv'+i+'">0</span><span class="dhint" aria-hidden="true">&#8597;</span>'
+       +'<button data-i="'+i+'" data-d="1" aria-label="more stock at '+NAMES[i]+'">+</button>'
+       +'</div></div>';
+  });
+  dwrap.innerHTML=s+ctl;
+  // coverage chips
+  $("balrow").innerHTML=S.nodes.map((nd,i)=>
+    '<span class="balchip" id="bc'+i+'"><i class="tag" style="background:var(--town)" id="bt'+i+'"></i>'+NAMES[i]+' <span id="bv'+i+'"></span></span>').join("");
+  // stage chips
+  $("stagechips").innerHTML=STAGES.map((st,k)=>
+    '<button class="stagechip'+(k===si?" on":"")+'" data-s="'+k+'">'+st.label+'</button>').join(" ");
+}
+
+// ---- live render: auto-route, paint flows, chips, readouts, formulation values ----
+function render(){
+  const S=stage(), sc=scorePlacement(si,r);
+  // steppers + node colors
+  S.nodes.forEach((nd,i)=>{
+    const el=$("rv"+i); el.textContent=r[i]; el.classList.toggle("zero",r[i]===0);
+    $("ns"+i).classList.toggle("live",r[i]>0);
+    $("nc"+i).setAttribute("fill", r[i]>0?"var(--depot)":"var(--town)");
+    $("nc"+i).setAttribute("r", RAD+(r[i]>0?Math.min(7,7*r[i]/60):0)); // size grows with stock
+    // stock gauge: fill bottom-up, scaled against the whole budget; shaded zone = own need
+    const by=barY(nd), fh=(BARH-4)*Math.min(r[i]/B,1), zh=(BARH-4)*Math.min(nd.d/B,1);
+    $("fb"+i).setAttribute("y", by+2+(BARH-4)-fh);
+    $("fb"+i).setAttribute("height", fh);
+    $("dz"+i).setAttribute("y", by+2+(BARH-4)-zh);
+    $("dz"+i).setAttribute("height", zh);
+    const met=sc.short[i]<=1e-6;
+    const c=$("nc"+i);
+    c.setAttribute("stroke", met?"#2fd27f":"var(--over)");
+    c.setAttribute("stroke-width", met?"4":"3.4");
+    c.setAttribute("stroke-dasharray", met?"1 0":"6 5");
+    const chip=$("bc"+i);
+    chip.classList.toggle("ok",met); chip.classList.toggle("no",!met);
+    $("bt"+i).style.background=r[i]>0?"var(--depot)":"var(--town)";
+    $("bv"+i).textContent=met?(nd.d+" / "+nd.d+" ✓"):("short "+Math.round(sc.short[i]));
+  });
+  // stepper enable/disable: budget + depot cap
+  const full=usedR()>=B, cap=openCount()>=P;
+  S.nodes.forEach((nd,i)=>{
+    const btns=$("ns"+i).querySelectorAll("button");
+    btns[0].disabled=r[i]===0;
+    btns[1].disabled=full||(r[i]===0&&cap);
+    btns[1].title=btns[1].disabled?(full?"budget B is used up":"facility cap p reached — empty a facility first"):"";
+  });
+  // flows on roads (decomposed along shortest paths through the sparse network)
+  const ef=new Map();
+  for(const{i,j,amt}of sc.assign){let u=i;
+    while(u!==j){const v=S.next[u][j];
+      ef.set(u+"-"+v,(ef.get(u+"-"+v)||0)+amt);u=v;}}
+  S.edges.forEach(([a,b],k)=>{
+    const fab=ef.get(a+"-"+b)||0, fba=ef.get(b+"-"+a)||0, f=fab+fba;
+    const line=$("fl"+k);
+    line.setAttribute("stroke-width", f>0? String(2.5+Math.min(f/6,5)) : "0");
+    line.setAttribute("marker-end", f>0?"url(#arwF)":"");
+    if(f>0&&fba>fab){ // arrow points along the dominant direction of relief
+      const x1=line.getAttribute("x1"),y1=line.getAttribute("y1");
+      line.setAttribute("x1",line.getAttribute("x2"));line.setAttribute("y1",line.getAttribute("y2"));
+      line.setAttribute("x2",x1);line.setAttribute("y2",y1);
+    }
+    $("ft"+k).textContent=f>0?Math.round(f):"";
+  });
+  // readouts + formulation
+  const nd=openCount(), st=Math.round(usedR());
+  $("ndep").textContent=nd; $("pcap").textContent=P;
+  $("nstk").textContent=st; $("bcap").textContent=B;
+  const shortAll=Math.round(sc.totShort);
+  $("shv").textContent=nd===0&&st===0?"—":String(shortAll);
+  $("shbox").className="readout "+(shortAll>0?"bad":"ok");
+  const cost=Math.round(sc.cost);
+  $("cost").textContent=cost;
+  $("objval").textContent=$("objbar").textContent=$("cost").textContent;
+  // live breakdown: every decision changes it, and the unit costs stay visible
+  const b=sc.bd;
+  $("costline").innerHTML=
+    "= open <b class='n-open'>"+sc.open.length+"</b> &times; 100 &nbsp;+&nbsp; stock <b class='n-stock'>"+st+"</b> &times; 10"
+    +" &nbsp;+&nbsp; transport <b class='n-tr'>"+Math.round(b.trans)+"</b>"
+    +" &nbsp;+&nbsp; <span class='pen'>unmet demand <b>"+shortAll+"</b> &times; 60</span>"
+    +(b.surpU>0.5?" &nbsp;+&nbsp; unused stock <b>"+Math.round(b.surpU)+"</b> &times; 1":"");
+  $("pcon").textContent=nd+" / "+P;   $("pcon").className="mval cs"+(nd>=P?" tight":"");
+  $("bcon").textContent=st+" / "+B;   $("bcon").className="mval cs"+(st>=B?" tight":"");
+  $("submit").disabled=nd===0;
+}
+
+// ---- interactions ----
+dwrap.addEventListener("click",e=>{
+  const bn=e.target.closest(".ac-step button"); if(!bn||bn.disabled)return;
+  const i=+bn.dataset.i, d=+bn.dataset.d; // − / + move exactly one pallet
+  r[i]=Math.max(0,Math.min(r[i]+d, r[i]+(B-usedR())));
+  render();
+});
+// drag-to-stock (Markowitz-style). On the gauge bar the level jumps to the finger;
+// on the town circle or its value pill the level moves relative to the drag.
+let drag=null; const PX_PER_PALLET=3;
+function dragTown(e){
+  const b=e.target.closest("[data-bar]"); if(b)return {i:+b.dataset.bar, abs:true};
+  const c=e.target.closest("[data-drag]"); if(c)return {i:+c.dataset.drag, abs:false};
+  const st=e.target.closest(".node-ctl .ac-step");
+  if(st&&!e.target.closest("button"))return {i:+st.id.slice(2), abs:false};
+  return null;
+}
+function setStock(i,v){
+  v=Math.max(0,Math.min(drag.max,Math.round(v)));
+  if(drag.capBlocked&&v>0)v=0; // facility cap p reached: a new node cannot open
+  if(v!==r[i]){r[i]=v;render();}
+}
+function absValue(e){
+  const S=stage(), nd=S.nodes[drag.i];
+  const rc=dwrap.querySelector("svg").getBoundingClientRect();
+  const sy=rc.height/S.vbh;
+  const bottom=rc.top+(barY(nd)+2+(BARH-4))*sy;
+  return (bottom-e.clientY)/((BARH-4)*sy)*B;
+}
+dwrap.addEventListener("pointerdown",e=>{
+  const t=dragTown(e); if(!t)return;
+  drag={i:t.i, abs:t.abs, y:e.clientY, r0:r[t.i], max:r[t.i]+(B-usedR()),
+        capBlocked:r[t.i]===0&&openCount()>=P};
+  $("ns"+t.i).classList.add("dragging");
+  e.preventDefault();
+  try{e.target.setPointerCapture(e.pointerId);}catch(_){}
+  if(drag.abs)setStock(drag.i,absValue(e));
+});
+dwrap.addEventListener("pointermove",e=>{
+  if(!drag)return;
+  setStock(drag.i, drag.abs ? absValue(e)
+                            : drag.r0+(drag.y-e.clientY)/PX_PER_PALLET);
+});
+["pointerup","pointercancel"].forEach(ev=>dwrap.addEventListener(ev,()=>{
+  if(drag){$("ns"+drag.i).classList.remove("dragging");drag=null;}
+}));
+$("stagechips").addEventListener("click",e=>{
+  const c=e.target.closest(".stagechip"); if(!c)return; loadStage(+c.dataset.s);
+});
+function resetPlan(){ r=Array(stage().n).fill(0); render(); }
+$("reset").onclick=resetPlan;
+
+const overlay=$("overlay");
+$("submit").onclick=()=>{
+  const S=stage(), sc=scorePlacement(si,r), opt=solveOpt(si,P,B);
+  const my=Math.round(sc.cost), oc=Math.round(opt.cost);
+  const win=my<=oc+Math.max(1,0.005*oc);
+  $("mhead").className="modal-head "+(win?"win":"lose");
+  $("mtitle").textContent=win?"🎖 Optimal plan!":"Not optimal yet";
+  $("msub").textContent=win?"Your facilities and stock match the integer program's minimum.":"A cheaper facility-and-stock plan exists on this map.";
+  $("myscore").textContent=my; $("optscore").textContent=oc;
+  const rows=opt.set.map(i=>'<div class="assign-row"><span>Node '+NAMES[i]+'</span><span class="b">stock '+Math.round(opt.r[i])+'</span></div>');
+  if(opt.totShort>0.05)rows.push('<div class="assign-row"><span>Left short (cheapest to abandon)</span><span class="b">'+Math.round(opt.totShort)+' units</span></div>');
+  rows.push('<div class="assign-row" style="border-top:1px dashed var(--line);margin-top:6px;padding-top:8px"><span>Total cost</span><span class="b">'+oc+'</span></div>');
+  $("optlist").innerHTML=rows.join("");
+  // teaching note
+  let note;
+  if(win){
+    note="You matched the integer program's minimum. "
+        +(opt.totShort>0.05
+          ? "Even the optimum leaves "+Math.round(opt.totShort)+" units short: with B = "+B+", serving the dearest demand costs more than the 60-per-unit penalty, so rationing is optimal. "
+          : "")
+        +(opt.set.length<P
+          ? "Note it opens only "+opt.set.length+" of the "+P+" facilities allowed — the cap is an inequality, and a facility costs 100 before its first unit of stock."
+          : "Try the next map.");
+  }else{
+    note=opt.set.length!==openCount()
+      ? "The optimum opens "+opt.set.length+" facilit"+(opt.set.length===1?"y":"ies")+" here, not "+openCount()+". Remember: transport cost adds up per road relayed, but every facility costs 100 before its first unit of stock."
+      : "Right number of facilities — compare where. A central node with small demand often beats a big-demand node at the edge, because everyone else's shipments travel fewer roads.";
+  }
+  $("mnote").textContent=note;
+  overlay.classList.add("open");
+};
+$("close").onclick=()=>overlay.classList.remove("open");
+$("retry").onclick=()=>{overlay.classList.remove("open");resetPlan();};
+overlay.addEventListener("click",e=>{if(e.target===overlay)overlay.classList.remove("open");});
+
+loadStage(0);
+</script>
