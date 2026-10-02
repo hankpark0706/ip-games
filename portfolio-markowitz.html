@@ -63,6 +63,22 @@
   .intro h1 { margin: 0 0 6px; font-size: 24px; font-weight: 800; letter-spacing: -0.01em; }
   .intro p { margin: 0; font-size: 14.5px; line-height: 1.6; color: var(--intro); }
 
+  /* version toggle: min risk <-> max return; only the matching version's text shows */
+  .modes {
+    display: inline-flex; gap: 3px; padding: 3px; margin-top: 12px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    box-shadow: 0 4px 14px rgba(23,65,107,0.10);
+  }
+  .modes button {
+    font: inherit; font-size: 14px; font-weight: 800; cursor: pointer; text-align: center;
+    padding: 7px 18px; border: 0; border-radius: 8px; background: transparent; color: var(--muted);
+  }
+  .modes button small { display: block; font-size: 11.5px; font-weight: 700; opacity: 0.85; margin-top: 1px; }
+  .modes button:hover:not([aria-pressed="true"]) { background: var(--hover); }
+  .modes button[aria-pressed="true"] { background: var(--head-bg); color: var(--head-ink); }
+  .modes button:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; }
+  body[data-mode="max"] .only-min, body:not([data-mode="max"]) .only-max { display: none; }
+
   .sheet {
     background: var(--panel); border: 1px solid var(--line);
     border-radius: 10px; overflow: hidden; box-shadow: 0 12px 34px rgba(23,65,107,0.18);
@@ -236,8 +252,14 @@
   <div class="intro">
     <p class="eyebrow">Invest the Fund</p>
     <h1>Markowitz Portfolio</h1>
-    <p>You have <b>$100</b> and three assets. Split it to earn an expected
+    <p class="only-min">You have <b>$100</b> and three assets. Split it to earn an expected
     <b>10% this year</b> at the <b>smallest possible risk</b>. Drag a bar, or tap −/+.</p>
+    <p class="only-max">You have <b>$100</b> and three assets. Split it to earn the
+    <b>highest expected return</b> while keeping the <b>risk (1σ) at most $13</b>. Drag a bar, or tap −/+.</p>
+    <div class="modes" role="group" aria-label="Version of the problem">
+      <button type="button" data-mode="min" aria-pressed="true">Min risk<small>s.t. return ≥ 10%</small></button>
+      <button type="button" data-mode="max" aria-pressed="false">Max return<small>s.t. risk ≤ $13</small></button>
+    </div>
   </div>
 
   <div class="dash">
@@ -260,10 +282,13 @@
       <div class="gauge-col">
         <div class="cap-label">Capital invested: <span id="invout">$0.00</span> / $100.00</div>
         <div class="gauge" id="ginv"><div class="fill" id="finv"></div></div>
-        <div class="cap-label">Expected profit: <span id="profout">$0.00</span> / target ≥ $10.00</div>
-        <div class="gauge" id="gprof"><div class="fill" id="fprof"></div><div class="tick" style="left:66.67%"></div></div>
+        <div class="cap-label only-min">Expected profit: <span id="profout">$0.00</span> / target ≥ $10.00</div>
+        <div class="gauge only-min" id="gprof"><div class="fill" id="fprof"></div><div class="tick" style="left:66.67%"></div></div>
+        <div class="cap-label only-max">Risk (1<span style="text-transform:none">σ</span>): <span id="capout">$0.00</span> / cap ≤ $13.00</div>
+        <div class="gauge only-max" id="grisk"><div class="fill" id="frisk"></div><div class="tick" style="left:43.33%"></div></div>
         <div class="readout">
-          <div><span class="k">Risk (1σ) </span><b id="riskout">$0.00</b></div>
+          <div class="only-min"><span class="k">Risk (1σ) </span><b id="riskout">$0.00</b></div>
+          <div class="only-max"><span class="k">Expected profit </span><b id="profout2">$0.00</b></div>
           <div><span class="k">Return </span><b id="retout">0.0%</b></div>
         </div>
       </div>
@@ -283,16 +308,22 @@
   </div>
     </div>
     <aside class="col-form">
-      <div class="form-head">Markowitz Model</div>
+      <div class="form-head">Markowitz Model<span class="only-min"> — min risk</span><span class="only-max"> — max return</span></div>
       <div class="math">
-        <div class="mrow"><span class="mlabel">minimize</span><span class="mexpr">x<sup>T</sup>&Sigma;x</span><span class="mval" id="objval">σ = 0.0%</span></div>
-        <div class="mrow sub"><span class="mlabel">subject to</span><span class="mexpr">&mu;<sup>T</sup>x &#8805; 0.10</span><span class="mnote">expected return at least 10%</span></div>
+        <div class="mrow only-min"><span class="mlabel">minimize</span><span class="mexpr">x<sup>T</sup>&Sigma;x</span><span class="mval" id="objval">σ = 0.0%</span></div>
+        <div class="mrow sub only-min"><span class="mlabel">subject to</span><span class="mexpr">&mu;<sup>T</sup>x &#8805; 0.10</span><span class="mnote">expected return at least 10%</span></div>
+        <div class="mrow only-max"><span class="mlabel">maximize</span><span class="mexpr">&mu;<sup>T</sup>x</span><span class="mval" id="objval2">= 0.0%</span></div>
+        <div class="mrow sub only-max"><span class="mlabel">subject to</span><span class="mexpr">x<sup>T</sup>&Sigma;x &#8804; 0.13<sup>2</sup></span><span class="mnote">risk σ at most 13%</span></div>
         <div class="mrow sub"><span class="mlabel"></span><span class="mexpr">x<sub>B</sub> + x<sub>T</sub> + x<sub>E</sub> &#8804; 1</span><span class="mnote">invest at most $100</span></div>
         <div class="mrow sub"><span class="mlabel"></span><span class="mexpr">x<sub>j</sub> &#8805; 0</span><span class="mnote">no short selling</span></div>
         <div class="vardef">x<sub>j</sub> = share of the $100 in asset <i>j</i>; whatever is
         left over sits in cash earning 0. Weights are continuous — any fraction of the budget is
-        allowed — so this is the classic Markowitz quadratic program. The objective is the variance
-        of your return; we display its square root σ — the standard deviation — in dollars.</div>
+        allowed.<span class="only-min"> This is the classic Markowitz quadratic program. The objective
+        is the variance of your return; we display its square root σ — the standard deviation — in
+        dollars.</span><span class="only-max"> Same data, roles swapped: the return is now the objective
+        and the variance is capped. The cap x<sup>T</sup>&Sigma;x &#8804; 0.13<sup>2</sup> is
+        &#8214;&Sigma;<sup>1/2</sup>x&#8214;<sub>2</sub> &#8804; 0.13 — a second-order cone constraint
+        under a linear objective, so this version is a conic program.</span></div>
       </div>
       <div class="datablk">
         <div class="cc-title">Data — mean <span style="text-transform:none">&mu;</span>, covariance &Sigma;</div>
@@ -302,9 +333,11 @@
       <div class="ccheck">
         <div class="cc-title">Constraints — live</div>
         <div class="cc-group"><span class="cc-h">Budget: invest at most $100</span><div class="cc-row"><span class="cc-chip" id="budchip"></span></div></div>
-        <div class="cc-group" style="margin-bottom:0"><span class="cc-h">Return target</span><div class="cc-row"><span class="cc-chip" id="retchip"></span></div></div>
+        <div class="cc-group only-min" style="margin-bottom:0"><span class="cc-h">Return target</span><div class="cc-row"><span class="cc-chip" id="retchip"></span></div></div>
+        <div class="cc-group only-max" style="margin-bottom:0"><span class="cc-h">Risk cap</span><div class="cc-row"><span class="cc-chip" id="riskchip"></span></div></div>
       </div>
-      <div class="objbar"><span>Objective&nbsp; risk σ = &#8730;(x<sup>T</sup>&Sigma;x)</span><b id="objbar">$0.00</b></div>
+      <div class="objbar only-min"><span>Objective&nbsp; risk σ = &#8730;(x<sup>T</sup>&Sigma;x)</span><b id="objbar">$0.00</b></div>
+      <div class="objbar only-max"><span>Objective&nbsp; expected profit = $100 &middot; &mu;<sup>T</sup>x</span><b id="objbar2">$0.00</b></div>
     </aside>
   </div>
   <div class="qr-card"><div class="qr-title">📱 Scan to play</div><img class="qr-img" src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27225%27%20height%3D%27225%27%20class%3D%27segno%27%3E%3Cg%20transform%3D%27scale%285%29%27%3E%3Cpath%20fill%3D%27%23fff%27%20d%3D%27M0%200h45v45h-45z%27%2F%3E%3Cpath%20class%3D%27qrline%27%20stroke%3D%27%2312233a%27%20d%3D%27M4%204.5h7m2%200h4m2%200h4m1%200h1m1%200h1m1%200h3m1%200h1m1%200h7m-37%201h1m5%200h1m2%200h1m1%200h1m1%200h4m2%200h1m1%200h1m3%200h1m1%200h1m2%200h1m5%200h1m-37%201h1m1%200h3m1%200h1m1%200h2m2%200h1m1%200h1m1%200h1m2%200h3m2%200h1m1%200h3m1%200h1m1%200h3m1%200h1m-37%201h1m1%200h3m1%200h1m1%200h2m1%200h1m1%200h3m1%200h1m1%200h1m2%200h1m1%200h2m1%200h1m2%200h1m1%200h3m1%200h1m-37%201h1m1%200h3m1%200h1m1%200h1m3%200h3m3%200h2m2%200h2m1%200h2m1%200h1m1%200h1m1%200h3m1%200h1m-37%201h1m5%200h1m1%200h4m2%200h2m2%200h1m3%200h1m1%200h2m1%200h1m2%200h1m5%200h1m-37%201h7m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h7m-29%201h1m2%200h1m2%200h2m-16%201h1m1%200h5m2%200h5m1%200h1m2%200h1m1%200h3m1%200h2m1%200h2m1%200h5m-34%201h1m1%200h1m1%200h1m6%200h1m2%200h2m4%200h1m6%200h1m2%200h1m3%200h1m-36%201h1m5%200h1m2%200h2m2%200h1m3%200h1m2%200h5m2%200h2m2%200h1m1%200h4m-37%201h3m1%200h2m2%200h1m1%200h2m4%200h1m4%200h3m3%200h1m2%200h3m3%200h1m-37%201h3m2%200h4m1%200h1m1%200h3m2%200h1m2%200h1m1%200h2m1%200h1m2%200h3m1%200h5m-37%201h2m2%200h1m6%200h2m3%200h6m1%200h1m1%200h2m1%200h1m2%200h1m-32%201h1m1%200h1m1%200h3m3%200h1m1%200h2m1%200h1m1%200h1m2%200h2m3%200h4m1%200h4m1%200h2m-37%201h1m2%200h1m1%200h1m3%200h3m3%200h1m1%200h2m2%200h2m1%200h1m2%200h1m1%200h4m3%200h1m-37%201h1m1%200h1m1%200h5m2%200h1m3%200h2m2%200h1m1%200h1m1%200h5m1%200h2m1%200h1m1%200h3m-35%201h4m2%200h1m1%200h3m1%200h2m2%200h1m1%200h3m1%200h1m3%200h2m1%200h1m2%200h2m-33%201h1m2%200h5m3%200h3m1%200h2m4%200h5m1%200h2m2%200h3m-37%201h1m2%200h3m1%200h2m2%200h1m1%200h1m1%200h1m3%200h3m2%200h1m1%200h1m1%200h5m3%200h1m-37%201h2m1%200h1m2%200h5m4%200h3m1%200h1m4%200h2m1%200h1m1%200h2m1%200h3m-31%201h1m4%200h2m5%200h1m1%200h3m2%200h1m1%200h2m1%200h1m4%200h1m1%200h1m-35%201h1m1%200h4m1%200h1m3%200h1m2%200h2m1%200h1m1%200h1m1%200h1m4%200h1m2%200h4m1%200h2m-37%201h4m4%200h5m3%200h1m2%200h2m2%200h1m3%200h1m3%200h2m-29%201h1m1%200h3m2%200h2m1%200h1m3%200h5m1%200h7m1%200h1m1%200h1m1%200h1m-37%201h2m5%200h6m2%200h3m6%200h1m1%200h1m1%200h1m5%200h1m-35%201h1m1%200h2m1%200h2m1%200h1m1%200h1m2%200h1m6%200h1m1%200h1m1%200h1m2%200h3m1%200h3m1%200h2m-37%201h1m2%200h1m1%200h1m2%200h1m1%200h5m1%200h1m4%200h1m6%200h1m2%200h2m3%200h1m-37%201h1m1%200h1m1%200h3m2%200h2m1%200h1m1%200h1m2%200h1m4%200h4m2%200h7m1%200h1m-29%201h5m4%200h3m1%200h1m1%200h1m2%200h1m1%200h1m3%200h2m1%200h1m-36%201h7m2%200h4m1%200h4m2%200h2m2%200h1m1%200h1m1%200h1m1%200h1m1%200h1m1%200h3m-37%201h1m5%200h1m1%200h2m2%200h1m1%200h1m2%200h7m4%200h1m3%200h2m1%200h1m-36%201h1m1%200h3m1%200h1m1%200h2m2%200h1m2%200h2m2%200h1m1%200h1m1%200h10m1%200h2m-36%201h1m1%200h3m1%200h1m1%200h1m1%200h2m1%200h1m1%200h1m2%200h1m1%200h1m1%200h2m4%200h3m1%200h3m1%200h1m-37%201h1m1%200h3m1%200h1m1%200h1m4%200h4m2%200h1m1%200h1m3%200h4m6%200h2m-37%201h1m5%200h1m2%200h4m2%200h1m3%200h4m4%200h2m3%200h1m3%200h1m-37%201h7m1%200h2m2%200h2m1%200h3m1%200h1m2%200h4m3%200h1m2%200h5%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E" alt="QR code to open the game on a phone"/><div class="qr-url">hankpark0706.github.io/ip-games/portfolio-markowitz.html</div></div>
@@ -317,8 +350,8 @@
       <p id="msub"></p>
     </div>
     <div class="modal-body">
-      <div class="scoreline"><span>Your risk (1σ)</span><span class="n" id="myscore"></span></div>
-      <div class="scoreline"><span>Optimal risk (1σ)</span><span class="n opt" id="optscore"></span></div>
+      <div class="scoreline"><span><span class="only-min">Your risk (1σ)</span><span class="only-max">Your expected profit</span></span><span class="n" id="myscore"></span></div>
+      <div class="scoreline"><span><span class="only-min">Optimal risk (1σ)</span><span class="only-max">Optimal expected profit</span></span><span class="n opt" id="optscore"></span></div>
       <div class="assign-list">
         <h3>Optimal portfolio</h3>
         <div id="optlist"></div>
@@ -346,15 +379,18 @@
     [0.001, 0.040, 0.015],
     [0.000, 0.015, 0.090],
   ];
-  const R = 0.10;                  // target expected return
+  const R = 0.10;                  // min-risk version: target expected return
+  const CAP = 0.13;                // max-return version: risk cap on sigma
   const BUDGET = 100;              // the fund, in dollars
   const STEP = 0.001;              // drag resolution: 0.1% of the fund = one won in a thousand
   const TAP  = 0.01;               // one press of -/+ moves 1% of the fund
-  const WIN_TOL = 0.005;           // inside 0.5% of the least possible risk counts as efficient
+  const WIN_TOL = 0.005;           // inside 0.5% of the optimal objective counts as efficient
   const PROF_MAX = 0.15 * BUDGET;  // gauge range: everything in energy = $15
+  const RISK_MAX = 0.30 * BUDGET;  // gauge range: everything in energy = $30 of risk
 
   // continuous weights, each in [0, 1] -- no lot grid, no integrality
   const x = [0, 0, 0];
+  let mode = "min";                // "min": min risk s.t. return >= R;  "max": max return s.t. risk <= CAP
 
   // ---- linear algebra on weights ----------------------------------------
   const dot  = (a, b) => a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
@@ -384,12 +420,46 @@
     const t = -dot(xp, mul(SIG, d)) / dot(d, mul(SIG, d));
     const xs = xp.map((v, i) => v + t * d[i]);
     if (xs.every(v => v >= -1e-9)) return { v: varOf(xs), x: xs.map(v => Math.max(v, 0)) };
-    return scanPortfolio();   // a weight went negative: the data was edited, fall back
+    // a weight went negative: the data was edited, fall back
+    return scanPortfolio(w => retOf(w) >= R - 1e-12, varOf);
   }
 
-  // Fallback if the active set above ever stops holding: successive refinement,
-  // re-centring on the incumbent and shrinking the box each round.
-  function scanPortfolio(){
+  // Exact continuous optimum of  max mu'x  s.t.  x'Sx <= CAP^2,  1'x <= 1,  x >= 0.
+  // The same efficient frontier, read from the other axis: the optimum is the
+  // minimum-variance portfolio whose risk is exactly CAP. On the plane 1'x = 1
+  // that least variance is (A r^2 - 2B r + C) / D at return r, with A = 1'S^-1 1,
+  // B = 1'S^-1 mu, C = mu'S^-1 mu, D = AC - B^2; setting it to CAP^2 and taking
+  // the larger root gives the best return. The budget binds as long as that
+  // return clears the tangency return C/B -- below it, holding cash would beat
+  // the frontier -- and no weight may go negative.
+  function bestMaxReturn(){
+    const Si = inv3(SIG), one = [1, 1, 1];
+    const Sm = mul(Si, MU), S1 = mul(Si, one);
+    const A = tot(S1), B = tot(Sm), C = dot(MU, Sm), D = A * C - B * B;
+    const disc = D * (A * CAP * CAP - 1);
+    if (disc >= 0){
+      const r = (B + Math.sqrt(disc)) / A;
+      const lam = (A * r - B) / D, gam = (C - B * r) / D;
+      const xs = Sm.map((v, i) => lam * v + gam * S1[i]);
+      if (r >= C / B && xs.every(v => v >= -1e-9)) return { r, x: xs.map(v => Math.max(v, 0)) };
+    }
+    const s = scanPortfolio(w => varOf(w) <= CAP * CAP + 1e-12, w => -retOf(w));
+    return { r: -s.v, x: s.x };
+  }
+
+  function inv3(M){
+    const [a, b, c] = M[0], [d, e, f] = M[1], [g, h, k] = M[2];
+    const c11 = e*k - f*h, c12 = f*g - d*k, c13 = d*h - e*g;
+    const det = a*c11 + b*c12 + c*c13;
+    return [[c11, c*h - b*k, b*f - c*e],
+            [c12, a*k - c*g, c*d - a*f],
+            [c13, b*g - a*h, a*e - b*d]].map(row => row.map(v => v / det));
+  }
+
+  // Fallback if an active set above ever stops holding: minimise cost(w) over
+  // the budget box with ok(w) as the remaining constraint, by successive
+  // refinement, re-centring on the incumbent and shrinking the box each round.
+  function scanPortfolio(ok, cost){
     let c = [0.5, 0.5, 0.5], h = 0.5, best = null;
     for (let round = 0; round < 12; round++){
       const N = 16, st = 2 * h / N;
@@ -401,8 +471,8 @@
           for (let k = 0; k <= N; k++){
             const e = c[2] - h + k * st; if (e < -1e-12 || e > 1 + 1e-12) continue;
             const w = [Math.max(a, 0), Math.max(b, 0), Math.max(e, 0)];
-            if (tot(w) > 1 + 1e-12 || retOf(w) < R - 1e-12) continue;
-            const v = varOf(w);
+            if (tot(w) > 1 + 1e-12 || !ok(w)) continue;
+            const v = cost(w);
             if (!found || v < found.v) found = { v, x: w };
           }
         }
@@ -412,9 +482,9 @@
     }
     return best;
   }
-  const best  = bestPortfolio();
-  const OPTSD = Math.sqrt(best.v);
+  const OPT = { min: bestPortfolio().x, max: bestMaxReturn().x };
   const allTech = [0, 1, 0];   // same 10% expected return, far more risk
+  const allBond = [1, 0, 0];   // the only single asset under the risk cap
 
   const money = n => "$" + n.toFixed(2);
   const pct  = (v, d=1) => (100 * v).toFixed(d) + "%";
@@ -528,8 +598,10 @@
     const invested = total * BUDGET;
     const over = total > 1 + 1e-9, full = total >= 1 - 1e-9 && !over;
     const ret = retOf(x), profit = ret * BUDGET;
-    const risk = riskOf(x);
+    const sd = Math.sqrt(varOf(x)), risk = sd * BUDGET;
     const retOK = ret >= R - 1e-9;
+    const riskOK = sd <= CAP + 1e-9;
+    const maxMode = mode === "max";
 
     x.forEach((w, i) => {
       document.getElementById("share" + i).innerHTML =
@@ -546,7 +618,15 @@
     document.getElementById("gprof").classList.toggle("met", retOK);
     document.getElementById("fprof").style.width = Math.min(profit / PROF_MAX, 1) * 100 + "%";
 
+    const capout = document.getElementById("capout");
+    capout.textContent = money(risk);
+    capout.className = !riskOK ? "over" : total > STEP / 2 ? "met" : "";
+    document.getElementById("grisk").classList.toggle("met", riskOK && total > STEP / 2);
+    document.getElementById("grisk").classList.toggle("over", !riskOK);
+    document.getElementById("frisk").style.width = Math.min(risk / RISK_MAX, 1) * 100 + "%";
+
     document.getElementById("riskout").textContent = money(risk);
+    document.getElementById("profout2").textContent = money(profit);
     document.getElementById("retout").textContent = pct(ret);
 
     const hint = document.getElementById("hint");
@@ -556,20 +636,28 @@
       hint.classList.add("warn");
     } else if (total < STEP / 2){
       hint.textContent = "Drag a bar up, or tap \u2212/+, to invest.";
-    } else if (!retOK){
+    } else if (maxMode && !riskOK){
+      hint.textContent = "Risk " + money(risk) + " is over the $13 cap \u2014 " +
+        "shift money toward bonds, or hold some cash.";
+      hint.classList.add("warn");
+    } else if (!maxMode && !retOK){
       hint.textContent = "Expected profit " + money(profit) + " is below $10 \u2014 " +
         (full ? "shift money toward tech or energy." : "invest more, or shift toward tech or energy.");
       hint.classList.add("warn");
     } else {
-      hint.textContent = "Feasible \u2713 \u2014 now minimise the risk, then Submit." +
+      hint.textContent = "Feasible \u2713 \u2014 now " +
+        (maxMode ? "maximise the profit" : "minimise the risk") + ", then Submit." +
         (full ? "" : "  (" + money(BUDGET - invested) + " sits idle)");
       hint.classList.add("ok");
     }
-    document.getElementById("submit").disabled = over || !retOK;
+    document.getElementById("submit").disabled =
+      over || (maxMode ? !riskOK || total < STEP / 2 : !retOK);
 
     // formulation panel
-    document.getElementById("objval").textContent = "\u03c3 = " + pct(Math.sqrt(varOf(x)));
+    document.getElementById("objval").textContent = "\u03c3 = " + pct(sd);
+    document.getElementById("objval2").textContent = "= " + pct(ret);
     document.getElementById("objbar").textContent = money(risk);
+    document.getElementById("objbar2").textContent = money(profit);
     const bud = document.getElementById("budchip");
     bud.innerHTML = "x<sub>B</sub>+x<sub>T</sub>+x<sub>E</sub> = " + total.toFixed(3) +
                     (over ? " &gt; 1" : " \u2264 1") + " &nbsp;(" + money(invested) + ")";
@@ -579,6 +667,11 @@
     rc.innerHTML = "\u03bc<sup>T</sup>x = " + pct(ret) + (retOK ? " \u2265 10%" : " &lt; 10%");
     rc.classList.toggle("ok", retOK && total > STEP / 2);
     rc.classList.toggle("over", !retOK && full);
+    const kc = document.getElementById("riskchip");
+    kc.innerHTML = "σ = " + pct(sd, 2) + (riskOK ? " ≤ 13%" : " &gt; 13%") +
+                   " &nbsp;(" + money(risk) + ")";
+    kc.classList.toggle("ok", riskOK && total > STEP / 2);
+    kc.classList.toggle("over", !riskOK);
   }
 
   document.getElementById("reset").onclick = () => { x.fill(0); render(); };
@@ -587,15 +680,15 @@
   // Same three bars as the notebook figure: height = the share of the fund,
   // labelled with the percentage and the dollars. Bars start at zero, so the
   // heights are in true proportion to each other.
-  function optBarsSVG(){
+  function optBarsSVG(opt){
     const W = 384, H = 162, BASE = 124, PAD = 16;
     const SLOT = (W - 2 * PAD) / 3, BW = 54, TALL = 102;
-    const scale = TALL / Math.max.apply(null, best.x);
+    const scale = TALL / Math.max.apply(null, opt);
     let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Optimal portfolio: ' +
-            best.x.map((w, i) => ASSETS[i].name + ' ' + pct(w, 1)).join(', ') + '">';
+            opt.map((w, i) => ASSETS[i].name + ' ' + pct(w, 1)).join(', ') + '">';
     s += '<line x1="' + PAD + '" y1="' + BASE + '" x2="' + (W - PAD) + '" y2="' + BASE +
          '" stroke="var(--line)" stroke-width="1"/>';
-    best.x.forEach((w, i) => {
+    opt.forEach((w, i) => {
       const cx = PAD + SLOT * (i + 0.5);
       const h = w * scale, y = BASE - h;
       s += '<rect x="' + (cx - BW / 2) + '" y="' + y + '" width="' + BW + '" height="' + h +
@@ -611,26 +704,35 @@
   // ---- submit / modal ----------------------------------------------------
   const overlay = document.getElementById("overlay");
   function showResult(){
-    const risk = riskOf(x), mySD = Math.sqrt(varOf(x));
-    const win = mySD <= OPTSD * (1 + WIN_TOL);
-    const techRisk = riskOf(allTech);
-    const morePct = Math.round(100 * (techRisk / (OPTSD * BUDGET) - 1));
+    const maxMode = mode === "max", opt = OPT[mode];
+    const risk = riskOf(x), mySD = Math.sqrt(varOf(x)), myRet = retOf(x);
+    const OPTSD = Math.sqrt(varOf(opt)), optRet = retOf(opt);
+    const win = maxMode ? myRet >= optRet * (1 - WIN_TOL) : mySD <= OPTSD * (1 + WIN_TOL);
     const head = document.getElementById("mhead");
     head.className = "modal-head " + (win ? "win" : "lose");
     document.getElementById("mtitle").textContent = win ? "\ud83d\udcc8 Efficient portfolio!" : "Not efficient yet";
-    document.getElementById("msub").textContent = win
-      ? "Within 0.5% of the least risk possible at a 10% expected return."
-      : "The same expected profit is possible with less risk.";
-    document.getElementById("myscore").textContent = money(risk);
-    document.getElementById("optscore").textContent = money(OPTSD * BUDGET);
-    const rows = best.x.map((w, i) =>
+    document.getElementById("msub").textContent = maxMode
+      ? (win ? "Within 0.5% of the highest expected return possible at $13 of risk."
+             : "More expected profit is possible at the same risk.")
+      : (win ? "Within 0.5% of the least risk possible at a 10% expected return."
+             : "The same expected profit is possible with less risk.");
+    document.getElementById("myscore").textContent = money(maxMode ? myRet * BUDGET : risk);
+    document.getElementById("optscore").textContent = money(maxMode ? optRet * BUDGET : OPTSD * BUDGET);
+    const rows = opt.map((w, i) =>
       '<div class="assign-row"><span style="color:' + ASSETS[i].color + '">' + ASSETS[i].name +
       '</span><span class="b">' + pct(w, 1) + ' &middot; ' + money(w * BUDGET) + '</span></div>');
     rows.push('<div class="assign-row" style="border-top:1px dashed var(--line);margin-top:6px;padding-top:8px"><span>Total</span><span class="b">expected profit ' +
-      money(retOf(best.x) * BUDGET) + ' &middot; risk ' + money(OPTSD * BUDGET) + '</span></div>');
+      money(optRet * BUDGET) + ' &middot; risk ' + money(OPTSD * BUDGET) + '</span></div>');
     document.getElementById("optlist").innerHTML = rows.join("");
-    document.getElementById("optchart").innerHTML = optBarsSVG();
-    document.getElementById("mnote").textContent = win
+    document.getElementById("optchart").innerHTML = optBarsSVG(opt);
+    document.getElementById("mnote").textContent = maxMode ? maxNote(win, myRet, risk) : minNote(win, risk, OPTSD);
+    overlay.classList.add("open");
+  }
+
+  function minNote(win, risk, OPTSD){
+    const techRisk = riskOf(allTech);
+    const morePct = Math.round(100 * (techRisk / (OPTSD * BUDGET) - 1));
+    return win
       ? "All-in tech promises the same $10 expected profit \u2014 at " + money(techRisk) +
         " of risk, " + morePct + "% more than yours. Your mix leans on the zero correlation between " +
         "bond and energy. Both constraints are tight: \u03bc\u1d40x = 10% exactly, and every dollar is " +
@@ -641,7 +743,24 @@
         "averages linearly, but risk does not \u2014 the covariance cross-terms shrink when you mix assets " +
         "that move independently (\u03a3 between bond and energy is 0). Try a bond\u2013energy core with a slice " +
         "of tech \u2014 and put the whole $100 to work: idle cash only forces concentration elsewhere.";
-    overlay.classList.add("open");
+  }
+
+  // The max-return version hits (almost) the same point of the frontier as the
+  // min-risk one: the $13 cap sits just above the min-risk portfolio's risk.
+  function maxNote(win, myRet, risk){
+    const twin = OPT.min, mix = twin.map((w, i) => ASSETS[i].name.toLowerCase() + " " + pct(w, 0)).join(", ");
+    const optProfit = retOf(OPT.max) * BUDGET;
+    return win
+      ? "Look at the mix: the min-risk version (return \u2265 10%) lands on " + mix + ", carrying " +
+        money(riskOf(twin)) + " of risk. A $13 cap sits just above that, so you land on almost the same " +
+        "portfolio \u2014 the two versions trace one efficient frontier from opposite axes. Both constraints " +
+        "are tight: \u03c3 = $13 exactly, and every dollar is invested. Bond is the only single asset under " +
+        "the cap, and alone it earns just " + money(retOf(allBond) * BUDGET) + "."
+      : "You earn " + money(myRet * BUDGET) + " at " + money(risk) + " of risk; " + money(optProfit) +
+        " is possible within the same $13 cap. Return adds up linearly, but risk does not \u2014 mixing " +
+        "assets that move independently (\u03a3 between bond and energy is 0) frees up risk budget to spend " +
+        "on energy's 15%. Use the whole $13 of risk and the whole $100: unused risk and idle cash both " +
+        "leave return on the table.";
   }
 
   document.getElementById("submit").onclick = showResult;
@@ -649,5 +768,22 @@
   document.getElementById("retry").onclick = () => { overlay.classList.remove("open"); x.fill(0); render(); };
   overlay.addEventListener("click", e => { if (e.target === overlay) overlay.classList.remove("open"); });
 
-  render();
+  // ---- version toggle ----------------------------------------------------
+  // The allocation carries over, so a min-risk answer can be checked against
+  // the risk cap. "#max" in the URL opens the max-return version directly.
+  function setMode(m){
+    mode = m;
+    document.body.dataset.mode = m;
+    document.querySelectorAll(".modes button").forEach(b =>
+      b.setAttribute("aria-pressed", b.dataset.mode === m));
+    overlay.classList.remove("open");
+    try { history.replaceState(null, "", m === "max" ? "#max" : location.pathname + location.search); } catch (e) {}
+    render();
+  }
+  document.querySelector(".modes").addEventListener("click", e => {
+    const bn = e.target.closest("button");
+    if (bn && bn.dataset.mode !== mode) setMode(bn.dataset.mode);
+  });
+
+  setMode(location.hash === "#max" ? "max" : "min");
 </script>
